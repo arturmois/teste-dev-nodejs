@@ -8,7 +8,10 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch src/server.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "prisma db seed"
   },
   "keywords": [],
   "author": "",
