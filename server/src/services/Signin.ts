@@ -21,6 +21,7 @@ class Signin {
     });
     return {
       token,
+      user: { id: user.id, name: user.name, username: user.username },
     };
   }
 }

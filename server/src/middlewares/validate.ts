@@ -3,7 +3,6 @@ import { z, ZodError } from "zod";
 
 export const validateInputData = (schema: z.ZodTypeAny) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.body);
     try {
       schema.parse(req.body);
       next();

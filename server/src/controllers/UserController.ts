@@ -16,8 +16,8 @@ class AuthController {
   async signin(req: Request, res: Response) {
     try {
       const { username, password } = req.body;
-      const { token } = await Signin.execute({ username, password });
-      res.status(200).json({ token });
+      const { token, user } = await Signin.execute({ username, password });
+      res.status(200).json({ token, user });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
