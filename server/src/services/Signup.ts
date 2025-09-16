@@ -5,25 +5,15 @@ class Signup {
   async execute(data: Input) {
     const { name, username, password } = data;
     const userExists = await prisma.user.findUnique({
-      where: { username: username },
+      where: { username },
     });
     if (userExists) {
       throw new Error("Username already exists");
     }
     const hashedPassword = await bcrypt.hash(password, 12);
-    const user = await prisma.user.create({
-      select: {
-        id: true,
-        name: true,
-        username: true,
-      },
+    await prisma.user.create({
       data: { name, username, password: hashedPassword },
     });
-    return {
-      id: user.id,
-      name: user.name,
-      username: user.username,
-    };
   }
 }
 

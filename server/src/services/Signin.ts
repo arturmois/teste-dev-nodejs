@@ -7,20 +7,20 @@ class Signin {
   async execute(data: Input) {
     const { username, password } = data;
     const user = await prisma.user.findUnique({
-      where: { username: username },
+      where: { username },
     });
-    if (!user) {
-      throw new Error("User not found");
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      throw new Error("Invalid credentials");
     }
-    const comparePassword = await bcrypt.compare(password, user.password);
-    if (!comparePassword) {
-      throw new Error("Invalid password");
-    }
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { is_online: true, last_seen: new Date() },
+    });
     const token = jwt.sign({ userId: user.id }, envs.JWT_SECRET, {
       expiresIn: "7d",
     });
     return {
-      token: token,
+      token,
     };
   }
 }

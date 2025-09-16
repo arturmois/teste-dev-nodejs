@@ -9,33 +9,33 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  username  String   @unique
-  password  String
-  isOnline  Boolean  @default(false)
-  lastSeen  DateTime @default(now())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  username   String   @unique
+  password   String
+  is_online  Boolean  @default(false)
+  last_seen  DateTime @default(now())
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  sentMessages     Message[] @relation("Sender")
-  receivedMessages Message[] @relation("Receiver")
+  sent_messages     Message[] @relation("Sender")
+  received_messages Message[] @relation("Receiver")
 
   @@map("users")
 }
 
 model Message {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  content   String
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  content    String
+  read       Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  senderId   String @db.ObjectId
-  receiverId String @db.ObjectId
+  sender_id   String @db.ObjectId
+  receiver_id String @db.ObjectId
 
-  sender   User @relation("Sender", fields: [senderId], references: [id])
-  receiver User @relation("Receiver", fields: [receiverId], references: [id])
+  sender   User @relation("Sender", fields: [sender_id], references: [id])
+  receiver User @relation("Receiver", fields: [receiver_id], references: [id])
 
   @@map("messages")
 }
