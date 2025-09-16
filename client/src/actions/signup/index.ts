@@ -1,18 +1,25 @@
 import { type SignupSchema, signupSchema } from "./schema";
 
 const signup = async (formData: SignupSchema) => {
-  const validatedData = signupSchema.parse(formData);
-  const response = await fetch("http://localhost:3001/api/auth/signup", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(validatedData),
-  });
-  if (!response.ok) {
-    throw new Error("Erro ao criar conta");
+  try {
+    const validatedData = signupSchema.parse(formData);
+    const { confirmPassword: _, ...serverData } = validatedData;
+    const response = await fetch("http://localhost:3001/api/auth/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(serverData),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      return { error: data.message || "Erro ao criar conta" };
+    }
+    return { success: true, data };
+  } catch (error) {
+    console.error("Signup error:", error);
+    return { error: "Erro inesperado ao criar conta" };
   }
-  return response.json();
 };
 
-export { signup };
+export default signup;

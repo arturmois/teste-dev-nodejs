@@ -41,7 +41,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function SignupPage() {
+export default function SigninPage() {
   const router = useRouter();
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -51,18 +51,21 @@ export default function SignupPage() {
     },
   });
   async function onSubmit(values: FormValues) {
-    const result = await signIn("credentials", {
-      username: values.username,
-      password: values.password,
-      redirect: false,
-    });
-    if (result?.error) {
-      toast.error("Erro no login", {
-        description: result.error,
+    try {
+      const result = await signIn("credentials", {
+        username: values.username,
+        password: values.password,
+        redirect: false,
       });
-    } else {
-      toast.success("Login realizado com sucesso");
-      router.push("/chat");
+      if (result?.ok) {
+        toast.success("Login realizado com sucesso");
+        return router.push("/chat");
+      }
+      toast.error("Erro ao fazer login");
+      console.error("Signin error:", result?.error);
+    } catch (error) {
+      toast.error("Erro inesperado");
+      console.error("Signin error:", error);
     }
   }
   return (
@@ -78,7 +81,7 @@ export default function SignupPage() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="username"
@@ -97,7 +100,7 @@ export default function SignupPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirmar senha</FormLabel>
+                    <FormLabel>Senha</FormLabel>
                     <FormControl>
                       <Input placeholder="Senha" {...field} type="password" />
                     </FormControl>
@@ -105,10 +108,18 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Criar conta
-                {form.formState.isSubmitting && (
-                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+              <Button
+                type="submit"
+                className="w-full cursor-pointer"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Entrando...
+                  </>
+                ) : (
+                  "Entrar"
                 )}
               </Button>
             </form>

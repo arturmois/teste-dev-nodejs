@@ -1,11 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { signup } from "@/actions/signup";
+import signup from "@/actions/signup";
 import { type SignupSchema, signupSchema } from "@/actions/signup/schema";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,12 +38,17 @@ export default function SignupPage() {
     },
   });
   async function onSubmit(values: SignupSchema) {
-    const result = await signup(values);
-    if (result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success("Conta criada com sucesso");
-      router.push("/auth/signin");
+    try {
+      const result = await signup(values);
+      if (result.success) {
+        toast.success("Conta criada com sucesso");
+        return router.push("/auth/signin");
+      }
+      toast.error("Erro ao criar conta");
+      console.error("Signup error:", result.error);
+    } catch (error) {
+      toast.error("Erro inesperado");
+      console.error("Signup error:", error);
     }
   }
   return (
@@ -53,12 +59,12 @@ export default function SignupPage() {
             Bem-vindo
           </CardTitle>
           <CardDescription className="text-center">
-            Faça login em sua conta ou crie uma nova
+            Crie sua conta para começar a conversar
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="name"
@@ -107,16 +113,28 @@ export default function SignupPage() {
                     <FormControl>
                       <Input
                         placeholder="Confirmar senha"
-                        {...field}
                         type="password"
+                        disabled={form.formState.isSubmitting}
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Criar conta
+              <Button
+                type="submit"
+                className="w-full cursor-pointer"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Criando conta...
+                  </>
+                ) : (
+                  "Criar conta"
+                )}
               </Button>
             </form>
           </Form>
