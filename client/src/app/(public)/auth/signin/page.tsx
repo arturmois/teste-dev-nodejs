@@ -1,7 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -22,40 +26,44 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-const formSchema = z
-  .object({
-    name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-    username: z
-      .string()
-      .min(3, "Nome de usuário deve ter pelo menos 3 caracteres"),
-    password: z
-      .string()
-      .min(6, "Senha deve ter pelo menos 6 caracteres")
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Senha deve conter pelo menos uma letra maiúscula, uma letra minúscula e um número",
-      ),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Senhas não coincidem",
-    path: ["confirmPassword"],
-  });
+const formSchema = z.object({
+  username: z
+    .string()
+    .min(3, "Nome de usuário deve ter pelo menos 3 caracteres"),
+  password: z
+    .string()
+    .min(6, "Senha deve ter pelo menos 6 caracteres")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Senha deve conter pelo menos uma letra maiúscula, uma letra minúscula e um número",
+    ),
+});
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function SignupPage() {
+  const router = useRouter();
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
       username: "",
       password: "",
-      confirmPassword: "",
     },
   });
-  function onSubmit(values: FormValues) {
-    console.log(values);
+  async function onSubmit(values: FormValues) {
+    const result = await signIn("credentials", {
+      username: values.username,
+      password: values.password,
+      redirect: false,
+    });
+    if (result?.error) {
+      toast.error("Erro no login", {
+        description: result.error,
+      });
+    } else {
+      toast.success("Login realizado com sucesso");
+      router.push("/chat");
+    }
   }
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -65,25 +73,12 @@ export default function SignupPage() {
             Bem-vindo
           </CardTitle>
           <CardDescription className="text-center">
-            Faça login em sua conta ou crie uma nova
+            Faça login em sua conta
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="username"
@@ -102,7 +97,7 @@ export default function SignupPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Senha</FormLabel>
+                    <FormLabel>Confirmar senha</FormLabel>
                     <FormControl>
                       <Input placeholder="Senha" {...field} type="password" />
                     </FormControl>
@@ -110,25 +105,11 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirmar senha</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Confirmar senha"
-                        {...field}
-                        type="password"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <Button type="submit" className="w-full">
                 Criar conta
+                {form.formState.isSubmitting && (
+                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                )}
               </Button>
             </form>
           </Form>
