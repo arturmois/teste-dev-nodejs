@@ -17,50 +17,6 @@ import { ChatArea } from "./_components/chat-area";
 import { ChatHeader } from "./_components/chat-header";
 import { UserSidebar } from "./_components/user-sidebar";
 
-const mockUser: SocketUserData = {
-  id: "1",
-  name: "João Silva",
-  username: "joao.silva",
-  isOnline: true,
-  lastSeen: new Date(),
-  avatar: "https://github.com/shadcn.png",
-};
-
-const mockUsers: SocketUserData[] = [
-  {
-    id: "2",
-    name: "Maria Santos",
-    username: "maria.santos",
-    isOnline: true,
-    lastSeen: new Date(),
-    avatar: "https://github.com/shadcn.png",
-  },
-  {
-    id: "3",
-    name: "Pedro Costa",
-    username: "pedro.costa",
-    isOnline: false,
-    lastSeen: new Date(Date.now() - 5 * 60 * 1000),
-    avatar: "https://github.com/shadcn.png",
-  },
-  {
-    id: "4",
-    name: "Ana Oliveira",
-    username: "ana.oliveira",
-    isOnline: true,
-    lastSeen: new Date(),
-    avatar: "https://github.com/shadcn.png",
-  },
-  {
-    id: "5",
-    name: "Carlos Lima",
-    username: "carlos.lima",
-    isOnline: false,
-    lastSeen: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    avatar: "https://github.com/shadcn.png",
-  },
-];
-
 export default function ChatPage() {
   console.log("ChatPage render");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -69,8 +25,7 @@ export default function ChatPage() {
   const { socket, isConnected, transport } = useSocket();
   const { usersOnline } = useOnlineUsers();
 
-  const allUsers: SocketUserData[] =
-    usersOnline.length > 0 ? usersOnline : mockUsers;
+  const allUsers: SocketUserData[] = usersOnline.length > 0 ? usersOnline : [];
   const selectedUser = allUsers.find(
     (user: SocketUserData) => user.id === selectedUserId,
   );
@@ -124,7 +79,7 @@ export default function ChatPage() {
         <div className="flex-1 overflow-hidden">
           <ChatArea
             selectedUser={selectedUser}
-            currentUser={mockUser as SocketUserData}
+            currentUser={selectedUser as SocketUserData}
           />
         </div>
       </div>
