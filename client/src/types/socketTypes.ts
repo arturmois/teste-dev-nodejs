@@ -14,3 +14,10 @@ export interface MessageData {
   receiverId: string;
   timestamp: string;
 }
+
+export interface SendMessageData {
+  id: string;
+  content: string;
+  senderId: string;
+  receiverId: string;
+}

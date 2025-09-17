@@ -66,9 +66,8 @@ export function SocketProvider({ children }: SocketProviderProps) {
         const messageData = {
           content,
           receiverId,
-          timestamp: new Date().toISOString(),
         };
-        socketRef.current.emit("send_message", messageData);
+        socketRef.current.emit(socketEvents.SEND_MESSAGE, messageData);
       }
     },
     [socketState.isConnected],
@@ -98,13 +97,16 @@ export function SocketProvider({ children }: SocketProviderProps) {
   useEffect(() => {
     if (session?.token) {
       console.log("Iniciando conexão socket...");
+
       socketRef.current = io(process.env.NEXT_PUBLIC_BACKEND_URL!, {
         withCredentials: true,
         auth: {
           token: session.token,
         },
       });
+
       const socket = socketRef.current;
+
       const onConnect = () => {
         console.log("Socket conectado");
         setSocketState({
@@ -112,6 +114,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
           transport: socket.io.engine.transport.name,
         });
       };
+
       const onDisconnect = () => {
         console.log("Socket desconectado");
         setSocketState({
@@ -119,9 +122,11 @@ export function SocketProvider({ children }: SocketProviderProps) {
           transport: "N/A",
         });
       };
+
       const onConnectError = (error: Error) => {
         console.error("Erro na conexão socket:", error.message);
       };
+
       const onUsersOnline = (users: SocketUserData[]) => {
         console.log("Usuários online atualizados:", users.length);
         setUsersOnline(users);
@@ -129,6 +134,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
           userStatusCallbacksRef.current.forEach((callback) => callback(users));
         }, 0);
       };
+
       const onUserOnline = (user: SocketUserData) => {
         console.log("Usuário online:", user.name);
         setUsersOnline((prev) => {
@@ -143,6 +149,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
           return newUsers;
         });
       };
+
       const onUserOffline = (userId: string) => {
         console.log("Usuário offline:", userId);
         setUsersOnline((prev) => {
@@ -155,27 +162,50 @@ export function SocketProvider({ children }: SocketProviderProps) {
           return newUsers;
         });
       };
+
       const onNewMessage = (message: MessageData) => {
         console.log("Nova mensagem recebida:", message);
         setMessages((prev) => [...prev, message]);
         messageCallbacksRef.current.forEach((callback) => callback(message));
       };
+
+      const onSendMessage = (message: MessageData) => {
+        console.log("Mensagem enviada:", message);
+        setMessages((prev) => [...prev, message]);
+        messageCallbacksRef.current.forEach((callback) => callback(message));
+      };
+
+      const onMessageSent = (message: MessageData) => {
+        console.log("Mensagem enviada confirmada:", message);
+        setMessages((prev) => [...prev, message]);
+        messageCallbacksRef.current.forEach((callback) => callback(message));
+      };
+
       socket.on(socketEvents.CONNECT, onConnect);
       socket.on(socketEvents.DISCONNECT, onDisconnect);
       socket.on(socketEvents.CONNECT_ERROR, onConnectError);
-      socket.on(socketEvents.USERS_ONLINE, onUsersOnline);
+
+      socket.on(socketEvents.ONLINE_USERS, onUsersOnline);
+      socket.on(socketEvents.ONLINE_USER, onUserOnline);
+      socket.on(socketEvents.OFFLINE_USER, onUserOffline);
+
       socket.on(socketEvents.NEW_MESSAGE, onNewMessage);
-      socket.on(socketEvents.USER_ONLINE, onUserOnline);
-      socket.on(socketEvents.USER_OFFLINE, onUserOffline);
+      socket.on(socketEvents.SEND_MESSAGE, onSendMessage);
+      socket.on(socketEvents.MESSAGE_SENT, onMessageSent);
+
       return () => {
         console.log("Limpando socket...");
         socket.off(socketEvents.CONNECT, onConnect);
         socket.off(socketEvents.DISCONNECT, onDisconnect);
         socket.off(socketEvents.CONNECT_ERROR, onConnectError);
-        socket.off(socketEvents.USERS_ONLINE, onUsersOnline);
+
+        socket.off(socketEvents.ONLINE_USERS, onUsersOnline);
+        socket.off(socketEvents.ONLINE_USER, onUserOnline);
+        socket.off(socketEvents.OFFLINE_USER, onUserOffline);
+
         socket.off(socketEvents.NEW_MESSAGE, onNewMessage);
-        socket.off(socketEvents.USER_ONLINE, onUserOnline);
-        socket.off(socketEvents.USER_OFFLINE, onUserOffline);
+        socket.off(socketEvents.SEND_MESSAGE, onSendMessage);
+        socket.off(socketEvents.MESSAGE_SENT, onMessageSent);
         socket.disconnect();
         socketRef.current = null;
       };
