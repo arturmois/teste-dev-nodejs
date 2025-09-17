@@ -44,6 +44,7 @@ export function ChatHeader({
             height={52}
             width={52}
             className="rounded-full"
+            style={{ width: "auto", height: "auto" }}
           />
         </div>
 
