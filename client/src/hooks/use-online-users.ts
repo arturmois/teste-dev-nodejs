@@ -10,13 +10,17 @@ export function useOnlineUsers() {
 
   useEffect(() => {
     setLocalUsers(usersOnline);
+  }, [usersOnline]);
 
+  useEffect(() => {
     const unsubscribe = onUserStatusChange((users) => {
-      setLocalUsers(users);
+      setTimeout(() => {
+        setLocalUsers(users);
+      }, 0);
     });
 
     return unsubscribe;
-  }, [usersOnline, onUserStatusChange]);
+  }, [onUserStatusChange]);
 
   return {
     usersOnline: localUsers,

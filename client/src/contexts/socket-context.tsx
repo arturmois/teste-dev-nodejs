@@ -137,9 +137,11 @@ export function SocketProvider({ children }: SocketProviderProps) {
         console.log("Usuários online atualizados:", users.length);
         const convertedUsers = users.map(convertSocketUserToUser);
         setUsersOnline(convertedUsers);
-        userStatusCallbacksRef.current.forEach((callback) =>
-          callback(convertedUsers),
-        );
+        setTimeout(() => {
+          userStatusCallbacksRef.current.forEach((callback) =>
+            callback(convertedUsers),
+          );
+        }, 0);
       };
       const onUserOnline = (user: SocketUserData) => {
         console.log("Usuário online:", user.name);
@@ -148,9 +150,11 @@ export function SocketProvider({ children }: SocketProviderProps) {
           const exists = prev.some((u) => u.id === user.id);
           if (exists) return prev;
           const newUsers = [...prev, convertedUser];
-          userStatusCallbacksRef.current.forEach((callback) =>
-            callback(newUsers),
-          );
+          setTimeout(() => {
+            userStatusCallbacksRef.current.forEach((callback) =>
+              callback(newUsers),
+            );
+          }, 0);
           return newUsers;
         });
       };
@@ -158,9 +162,11 @@ export function SocketProvider({ children }: SocketProviderProps) {
         console.log("Usuário offline:", userId);
         setUsersOnline((prev) => {
           const newUsers = prev.filter((user) => user.id !== userId);
-          userStatusCallbacksRef.current.forEach((callback) =>
-            callback(newUsers),
-          );
+          setTimeout(() => {
+            userStatusCallbacksRef.current.forEach((callback) =>
+              callback(newUsers),
+            );
+          }, 0);
           return newUsers;
         });
       };
