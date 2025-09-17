@@ -3,7 +3,7 @@ import { type SignupSchema, signupSchema } from "./schema";
 const signup = async (formData: SignupSchema) => {
   try {
     const validatedData = signupSchema.parse(formData);
-    const { confirmPassword: _, ...serverData } = validatedData;
+    const { confirmPassword: _confirmPassword, ...serverData } = validatedData;
     const response = await fetch("http://localhost:3001/api/auth/signup", {
       method: "POST",
       headers: {

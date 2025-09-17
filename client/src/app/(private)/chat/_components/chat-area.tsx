@@ -2,12 +2,15 @@
 
 import { Paperclip, Send, Smile } from "lucide-react";
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { MessageData } from "@/types/socket";
+
+import { useChatMessages } from "../../../../hooks/use-chat-messages";
 
 interface User {
   id: string;
@@ -30,56 +33,46 @@ interface ChatAreaProps {
   currentUser: User;
 }
 
-// Mock messages para demonstração
-const mockMessages: Message[] = [
-  {
-    id: "1",
-    senderId: "2",
-    content: "Oi! Como você está?",
-    timestamp: new Date(Date.now() - 10 * 60 * 1000),
-    type: "text",
-  },
-  {
-    id: "2",
-    senderId: "1",
-    content: "Oi Maria! Estou bem, obrigado. E você?",
-    timestamp: new Date(Date.now() - 9 * 60 * 1000),
-    type: "text",
-  },
-  {
-    id: "3",
-    senderId: "2",
-    content: "Também estou bem! Você viu o projeto que enviaram hoje?",
-    timestamp: new Date(Date.now() - 8 * 60 * 1000),
-    type: "text",
-  },
-  {
-    id: "4",
-    senderId: "1",
-    content:
-      "Sim, vi! Parece interessante. Podemos conversar sobre isso amanhã?",
-    timestamp: new Date(Date.now() - 5 * 60 * 1000),
-    type: "text",
-  },
-];
-
 export function ChatArea({ selectedUser, currentUser }: ChatAreaProps) {
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Usar o hook do contexto para mensagens do chat
+  const { messages: socketMessages, sendMessage: sendSocketMessage } =
+    useChatMessages(selectedUser?.id);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Combinar mensagens locais com mensagens do socket usando useMemo
+  const allMessages = useMemo(
+    () => [
+      ...localMessages,
+      ...socketMessages.map((msg: MessageData) => ({
+        id: msg.id,
+        senderId: msg.senderId,
+        content: msg.content,
+        timestamp: new Date(msg.timestamp),
+        type: "text" as const,
+      })),
+    ],
+    [localMessages, socketMessages],
+  );
+
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [allMessages]);
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedUser) return;
 
+    // Enviar mensagem via socket
+    sendSocketMessage(newMessage.trim());
+
+    // Adicionar mensagem localmente para feedback imediato
     const message: Message = {
       id: Date.now().toString(),
       senderId: currentUser.id,
@@ -88,7 +81,7 @@ export function ChatArea({ selectedUser, currentUser }: ChatAreaProps) {
       type: "text",
     };
 
-    setMessages((prev) => [...prev, message]);
+    setLocalMessages((prev) => [...prev, message]);
     setNewMessage("");
     setTimeout(scrollToBottom, 100);
   };
@@ -146,7 +139,7 @@ export function ChatArea({ selectedUser, currentUser }: ChatAreaProps) {
       <div className="flex-1 overflow-hidden bg-orange-100">
         <ScrollArea className="h-full p-2" ref={scrollAreaRef}>
           <div className="space-y-4">
-            {messages.map((message) => {
+            {allMessages.map((message) => {
               const isCurrentUser = message.senderId === currentUser.id;
               const sender = isCurrentUser ? currentUser : selectedUser;
 

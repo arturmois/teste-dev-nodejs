@@ -11,9 +11,19 @@ import {
 import { useMobile } from "@/hooks/use-mobile";
 import useSocket from "@/hooks/use-socket";
 
+import { useOnlineUsers } from "../../../hooks/use-online-users";
 import { ChatArea } from "./_components/chat-area";
 import { ChatHeader } from "./_components/chat-header";
 import { UserSidebar } from "./_components/user-sidebar";
+
+// Interface para o usuário (compatível com a interface User do ChatArea)
+interface User {
+  id: string;
+  name: string;
+  avatar: string;
+  status: "online" | "away" | "offline";
+  lastSeen?: Date;
+}
 
 // Mock data para demonstração
 const mockUser = {
@@ -60,8 +70,13 @@ export default function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useMobile();
   const { socket, isConnected, transport } = useSocket();
+  const { usersOnline } = useOnlineUsers();
 
-  const selectedUser = mockUsers.find((user) => user.id === selectedUserId);
+  // Combinar usuários online com usuários mock (fallback)
+  const allUsers: User[] = usersOnline.length > 0 ? usersOnline : mockUsers;
+  const selectedUser = allUsers.find(
+    (user: User) => user.id === selectedUserId,
+  );
   const handleUserSelect = (userId: string) => {
     setSelectedUserId(userId);
     if (isMobile) {
@@ -71,7 +86,10 @@ export default function ChatPage() {
 
   const handleLogout = () => {
     console.log("Logout clicked");
-    socket.emit("hello", "world");
+    console.log("Socket conectado:", isConnected);
+    console.log("Transport:", transport);
+    console.log("Usuários online:", usersOnline.length);
+    socket?.emit("hello", "world");
     // Implementar lógica de logout aqui
   };
 
@@ -87,7 +105,7 @@ export default function ChatPage() {
 
       <div className="hidden w-80 overflow-hidden pt-14 lg:block">
         <UserSidebar
-          users={mockUsers}
+          users={allUsers}
           selectedUserId={selectedUserId}
           onUserSelect={handleUserSelect}
         />
@@ -99,7 +117,7 @@ export default function ChatPage() {
             <SheetTitle>Usuários</SheetTitle>
           </SheetHeader>
           <UserSidebar
-            users={mockUsers}
+            users={allUsers}
             selectedUserId={selectedUserId}
             onUserSelect={handleUserSelect}
           />

@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 
+import { SocketProvider } from "@/contexts/socket-context";
+
 interface PrivateLayoutProps {
   children: React.ReactNode;
 }
@@ -10,7 +12,7 @@ const PrivateLayout = async ({ children }: PrivateLayoutProps) => {
   if (!session) {
     redirect("/auth/signin");
   }
-  return <>{children}</>;
+  return <SocketProvider>{children}</SocketProvider>;
 };
 
 export default PrivateLayout;
