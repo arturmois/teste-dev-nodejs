@@ -1,19 +1,12 @@
 import { useEffect, useState } from "react";
 
-import { useSocket } from "./use-socket";
+import type { SocketUserData } from "@/types/socketTypes";
 
-// Interface para o usuário (compatível com a interface User do ChatArea)
-interface User {
-  id: string;
-  name: string;
-  avatar: string;
-  status: "online" | "away" | "offline";
-  lastSeen?: Date;
-}
+import { useSocket } from "./use-socket";
 
 export function useOnlineUsers() {
   const { usersOnline, onUserStatusChange } = useSocket();
-  const [localUsers, setLocalUsers] = useState<User[]>(usersOnline);
+  const [localUsers, setLocalUsers] = useState<SocketUserData[]>(usersOnline);
 
   useEffect(() => {
     setLocalUsers(usersOnline);

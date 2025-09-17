@@ -10,57 +10,54 @@ import {
 } from "@/components/ui/sheet";
 import { useMobile } from "@/hooks/use-mobile";
 import useSocket from "@/hooks/use-socket";
+import type { SocketUserData } from "@/types/socketTypes";
 
 import { useOnlineUsers } from "../../../hooks/use-online-users";
 import { ChatArea } from "./_components/chat-area";
 import { ChatHeader } from "./_components/chat-header";
 import { UserSidebar } from "./_components/user-sidebar";
 
-// Interface para o usuário (compatível com a interface User do ChatArea)
-interface User {
-  id: string;
-  name: string;
-  avatar: string;
-  status: "online" | "away" | "offline";
-  lastSeen?: Date;
-}
-
-// Mock data para demonstração
-const mockUser = {
+const mockUser: SocketUserData = {
   id: "1",
   name: "João Silva",
+  username: "joao.silva",
+  isOnline: true,
+  lastSeen: new Date(),
   avatar: "https://github.com/shadcn.png",
-  status: "online" as const,
 };
 
-const mockUsers = [
+const mockUsers: SocketUserData[] = [
   {
     id: "2",
     name: "Maria Santos",
-    avatar: "https://github.com/shadcn.png",
-    status: "online" as const,
+    username: "maria.santos",
+    isOnline: true,
     lastSeen: new Date(),
+    avatar: "https://github.com/shadcn.png",
   },
   {
     id: "3",
     name: "Pedro Costa",
-    avatar: "https://github.com/shadcn.png",
-    status: "away" as const,
+    username: "pedro.costa",
+    isOnline: false,
     lastSeen: new Date(Date.now() - 5 * 60 * 1000),
+    avatar: "https://github.com/shadcn.png",
   },
   {
     id: "4",
     name: "Ana Oliveira",
-    avatar: "https://github.com/shadcn.png",
-    status: "online" as const,
+    username: "ana.oliveira",
+    isOnline: true,
     lastSeen: new Date(),
+    avatar: "https://github.com/shadcn.png",
   },
   {
     id: "5",
     name: "Carlos Lima",
-    avatar: "https://github.com/shadcn.png",
-    status: "offline" as const,
+    username: "carlos.lima",
+    isOnline: false,
     lastSeen: new Date(Date.now() - 2 * 60 * 60 * 1000),
+    avatar: "https://github.com/shadcn.png",
   },
 ];
 
@@ -72,10 +69,10 @@ export default function ChatPage() {
   const { socket, isConnected, transport } = useSocket();
   const { usersOnline } = useOnlineUsers();
 
-  // Combinar usuários online com usuários mock (fallback)
-  const allUsers: User[] = usersOnline.length > 0 ? usersOnline : mockUsers;
+  const allUsers: SocketUserData[] =
+    usersOnline.length > 0 ? usersOnline : mockUsers;
   const selectedUser = allUsers.find(
-    (user: User) => user.id === selectedUserId,
+    (user: SocketUserData) => user.id === selectedUserId,
   );
   const handleUserSelect = (userId: string) => {
     setSelectedUserId(userId);
@@ -90,7 +87,6 @@ export default function ChatPage() {
     console.log("Transport:", transport);
     console.log("Usuários online:", usersOnline.length);
     socket?.emit("hello", "world");
-    // Implementar lógica de logout aqui
   };
 
   return (
@@ -126,7 +122,10 @@ export default function ChatPage() {
 
       <div className="flex flex-1 flex-col overflow-hidden pt-14 lg:pl-0">
         <div className="flex-1 overflow-hidden">
-          <ChatArea selectedUser={selectedUser} currentUser={mockUser} />
+          <ChatArea
+            selectedUser={selectedUser}
+            currentUser={mockUser as SocketUserData}
+          />
         </div>
       </div>
     </div>

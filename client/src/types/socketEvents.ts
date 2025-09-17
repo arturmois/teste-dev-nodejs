@@ -2,7 +2,7 @@ export const socketEvents = {
   CONNECT: "connect",
   CONNECT_ERROR: "connect_error",
   DISCONNECT: "disconnect",
-  USERS_ONLINE: "users", // Ajustado para corresponder ao servidor
+  USERS_ONLINE: "users",
   NEW_MESSAGE: "new_message",
   MESSAGE_SENT: "message_sent",
   USER_ONLINE: "user_online",

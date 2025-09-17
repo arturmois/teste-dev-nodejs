@@ -8,38 +8,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { MessageData } from "@/types/socket";
+import type { MessageData, SocketUserData } from "@/types/socketTypes";
 
 import { useChatMessages } from "../../../../hooks/use-chat-messages";
 
-interface User {
-  id: string;
-  name: string;
-  avatar: string;
-  status: "online" | "away" | "offline";
-  lastSeen?: Date;
-}
-
-interface Message {
-  id: string;
-  senderId: string;
-  content: string;
-  timestamp: Date;
-  type: "text";
-}
-
 interface ChatAreaProps {
-  selectedUser?: User;
-  currentUser: User;
+  selectedUser?: SocketUserData;
+  currentUser: SocketUserData;
 }
 
 export function ChatArea({ selectedUser, currentUser }: ChatAreaProps) {
-  const [localMessages, setLocalMessages] = useState<Message[]>([]);
+  const [localMessages, setLocalMessages] = useState<MessageData[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Usar o hook do contexto para mensagens do chat
   const { messages: socketMessages, sendMessage: sendSocketMessage } =
     useChatMessages(selectedUser?.id);
 
@@ -47,7 +30,6 @@ export function ChatArea({ selectedUser, currentUser }: ChatAreaProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Combinar mensagens locais com mensagens do socket usando useMemo
   const allMessages = useMemo(
     () => [
       ...localMessages,
@@ -56,7 +38,6 @@ export function ChatArea({ selectedUser, currentUser }: ChatAreaProps) {
         senderId: msg.senderId,
         content: msg.content,
         timestamp: new Date(msg.timestamp),
-        type: "text" as const,
       })),
     ],
     [localMessages, socketMessages],
@@ -69,16 +50,14 @@ export function ChatArea({ selectedUser, currentUser }: ChatAreaProps) {
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedUser) return;
 
-    // Enviar mensagem via socket
     sendSocketMessage(newMessage.trim());
 
-    // Adicionar mensagem localmente para feedback imediato
-    const message: Message = {
+    const message: MessageData = {
       id: Date.now().toString(),
       senderId: currentUser.id,
       content: newMessage.trim(),
-      timestamp: new Date(),
-      type: "text",
+      receiverId: selectedUser.id,
+      timestamp: new Date().toISOString(),
     };
 
     setLocalMessages((prev) => [...prev, message]);
@@ -169,7 +148,7 @@ export function ChatArea({ selectedUser, currentUser }: ChatAreaProps) {
                       <p className="text-sm">{message.content}</p>
                     </div>
                     <span className="text-muted-foreground mt-1 text-xs">
-                      {formatTime(message.timestamp)}
+                      {formatTime(new Date(message.timestamp))}
                     </span>
                   </div>
                 </div>

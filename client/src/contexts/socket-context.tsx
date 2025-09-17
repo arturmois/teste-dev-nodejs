@@ -12,17 +12,8 @@ import {
 } from "react";
 import { io, Socket } from "socket.io-client";
 
-import { type MessageData, SocketUserData } from "@/types/socket";
 import { socketEvents } from "@/types/socketEvents";
-
-// Interface para o usuário (compatível com a interface User do ChatArea)
-interface User {
-  id: string;
-  name: string;
-  avatar: string;
-  status: "online" | "away" | "offline";
-  lastSeen?: Date;
-}
+import { type MessageData, SocketUserData } from "@/types/socketTypes";
 
 interface SocketState {
   isConnected: boolean;
@@ -33,14 +24,16 @@ interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
   transport: string;
-  usersOnline: User[];
+  usersOnline: SocketUserData[];
   messages: MessageData[];
 
   sendMessage: (content: string, receiverId: string) => void;
   clearMessages: () => void;
 
   onMessage: (callback: (message: MessageData) => void) => () => void;
-  onUserStatusChange: (callback: (users: User[]) => void) => () => void;
+  onUserStatusChange: (
+    callback: (users: SocketUserData[]) => void,
+  ) => () => void;
 }
 
 export const SocketContext = createContext<SocketContextType | null>(null);
@@ -49,12 +42,14 @@ interface SocketProviderProps {
   children: ReactNode;
 }
 
-// Função para converter SocketUserData para User
-const convertSocketUserToUser = (socketUser: SocketUserData): User => ({
+const convertSocketUserToUser = (
+  socketUser: SocketUserData,
+): SocketUserData => ({
   id: socketUser.id,
   name: socketUser.name,
+  username: socketUser.username,
   avatar: socketUser.avatar,
-  status: socketUser.isOnline ? "online" : "offline",
+  isOnline: socketUser.isOnline,
   lastSeen: socketUser.lastSeen,
 });
 
@@ -62,7 +57,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const { data: session } = useSession();
 
   const socketRef = useRef<Socket | null>(null);
-  const [usersOnline, setUsersOnline] = useState<User[]>([]);
+  const [usersOnline, setUsersOnline] = useState<SocketUserData[]>([]);
   const [messages, setMessages] = useState<MessageData[]>([]);
   const [socketState, setSocketState] = useState<SocketState>({
     isConnected: false,
@@ -72,7 +67,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const messageCallbacksRef = useRef<Set<(message: MessageData) => void>>(
     new Set(),
   );
-  const userStatusCallbacksRef = useRef<Set<(users: User[]) => void>>(
+  const userStatusCallbacksRef = useRef<Set<(users: SocketUserData[]) => void>>(
     new Set(),
   );
 
@@ -102,7 +97,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
   }, []);
 
   const onUserStatusChange = useCallback(
-    (callback: (users: User[]) => void) => {
+    (callback: (users: SocketUserData[]) => void) => {
       userStatusCallbacksRef.current.add(callback);
       return () => {
         userStatusCallbacksRef.current.delete(callback);
@@ -225,7 +220,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
   );
 }
 
-// Hook básico para compatibilidade (caso alguém importe diretamente do contexto)
 export function useSocketContext() {
   const context = useContext(SocketContext);
   if (!context) {

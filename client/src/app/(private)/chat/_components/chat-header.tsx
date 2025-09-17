@@ -4,17 +4,10 @@ import { LogOut, Menu, Phone, Video } from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
-
-interface User {
-  id: string;
-  name: string;
-  avatar: string;
-  status: "online" | "away" | "offline";
-  lastSeen?: Date;
-}
+import { type SocketUserData } from "@/types/socketTypes";
 
 interface ChatHeaderProps {
-  selectedUser?: User;
+  selectedUser?: SocketUserData;
   onLogout: () => void;
   onMenuClick?: () => void;
 }
