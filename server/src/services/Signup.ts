@@ -12,7 +12,12 @@ class Signup {
     }
     const hashedPassword = await bcrypt.hash(password, 12);
     await prisma.user.create({
-      data: { name, username, password: hashedPassword },
+      data: {
+        name,
+        username,
+        password: hashedPassword,
+        avatar: "https://github.com/shadcn.png",
+      },
     });
   }
 }
