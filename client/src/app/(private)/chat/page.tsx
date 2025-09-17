@@ -5,11 +5,11 @@ import { useState } from "react";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useMobile } from "@/hooks/use-mobile";
+import useSocket from "@/hooks/use-socket";
 
 import { ChatArea } from "./_components/chat-area";
 import { ChatHeader } from "./_components/chat-header";
@@ -55,12 +55,13 @@ const mockUsers = [
 ];
 
 export default function ChatPage() {
+  console.log("ChatPage render");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useMobile();
+  const { socket, isConnected, transport } = useSocket();
 
   const selectedUser = mockUsers.find((user) => user.id === selectedUserId);
-
   const handleUserSelect = (userId: string) => {
     setSelectedUserId(userId);
     if (isMobile) {
@@ -70,6 +71,7 @@ export default function ChatPage() {
 
   const handleLogout = () => {
     console.log("Logout clicked");
+    socket.emit("hello", "world");
     // Implementar lógica de logout aqui
   };
 
@@ -77,7 +79,6 @@ export default function ChatPage() {
     <div className="bg-background flex h-screen overflow-hidden">
       <div className="fixed top-0 right-0 left-0 z-50">
         <ChatHeader
-          user={mockUser}
           onLogout={handleLogout}
           selectedUser={selectedUser}
           onMenuClick={() => setSidebarOpen(true)}
