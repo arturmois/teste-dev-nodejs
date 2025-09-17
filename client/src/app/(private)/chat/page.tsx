@@ -5,11 +5,11 @@ import { useState } from "react";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useMobile } from "@/hooks/use-mobile";
-import useSocket from "@/hooks/use-socket";
 import type { SocketUserData } from "@/types/socketTypes";
 
 import { useOnlineUsers } from "../../../hooks/use-online-users";
@@ -22,7 +22,6 @@ export default function ChatPage() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useMobile();
-  const { socket, isConnected, transport } = useSocket();
   const { usersOnline } = useOnlineUsers();
 
   const allUsers: SocketUserData[] = usersOnline.length > 0 ? usersOnline : [];
@@ -36,22 +35,10 @@ export default function ChatPage() {
     }
   };
 
-  const handleLogout = () => {
-    console.log("Logout clicked");
-    console.log("Socket conectado:", isConnected);
-    console.log("Transport:", transport);
-    console.log("Usuários online:", usersOnline.length);
-    socket?.emit("hello", "world");
-  };
-
   return (
     <div className="bg-background flex h-screen overflow-hidden">
       <div className="fixed top-0 right-0 left-0 z-50">
-        <ChatHeader
-          onLogout={handleLogout}
-          selectedUser={selectedUser}
-          onMenuClick={() => setSidebarOpen(true)}
-        />
+        <ChatHeader onMenuClick={() => setSidebarOpen(true)} />
       </div>
 
       <div className="hidden w-80 overflow-hidden pt-14 lg:block">
@@ -66,6 +53,9 @@ export default function ChatPage() {
         <SheetContent side="left" className="bg-sidebar w-[85%] p-0">
           <SheetHeader>
             <SheetTitle>Usuários</SheetTitle>
+            <SheetDescription>
+              Selecione um usuário para começar a conversar
+            </SheetDescription>
           </SheetHeader>
           <UserSidebar
             users={allUsers}

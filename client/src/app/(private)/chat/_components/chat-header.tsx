@@ -1,22 +1,17 @@
 "use client";
 
-import { LogOut, Menu, Phone, Video } from "lucide-react";
+import { Menu } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
+import ButtonLogout from "@/components/common/button-logout";
 import { Button } from "@/components/ui/button";
-import { type SocketUserData } from "@/types/socketTypes";
 
 interface ChatHeaderProps {
-  selectedUser?: SocketUserData;
-  onLogout: () => void;
   onMenuClick?: () => void;
 }
 
-export function ChatHeader({
-  selectedUser,
-  onLogout,
-  onMenuClick,
-}: ChatHeaderProps) {
+export function ChatHeader({ onMenuClick }: ChatHeaderProps) {
   return (
     <header className="bg-card border-border border-b px-4 py-3">
       <div className="flex items-center justify-between">
@@ -31,32 +26,20 @@ export function ChatHeader({
           </Button>
         )}
         <div className="pl-30">
-          <Image
-            src="/logo.png"
-            alt="logo"
-            height={52}
-            width={52}
-            className="rounded-full"
-            style={{ width: "auto", height: "auto" }}
-          />
+          <Link href="/chat">
+            <Image
+              src="/logo.png"
+              alt="logo"
+              height={52}
+              width={52}
+              className="cursor-pointer rounded-full"
+              style={{ width: "auto", height: "auto" }}
+            />
+          </Link>
         </div>
 
         <div className="flex items-center gap-2">
-          {selectedUser && (
-            <>
-              {/* Botões de telefone e vídeo visíveis apenas em telas maiores */}
-              <Button variant="ghost" size="sm" className="hidden sm:flex">
-                <Phone className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm" className="hidden sm:flex">
-                <Video className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-          {/* Botão de logout */}
-          <Button variant="ghost" size="sm" onClick={onLogout}>
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <ButtonLogout />
         </div>
       </div>
     </header>

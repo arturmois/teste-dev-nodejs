@@ -58,7 +58,7 @@ export function UserSidebar({
             <button
               key={user.id}
               onClick={() => onUserSelect(user.id)}
-              className={`hover:bg-sidebar-accent/50 flex w-full items-center gap-3 rounded-lg p-3 transition-colors ${selectedUserId === user.id ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground"} `}
+              className={`hover:bg-sidebar-accent/50 flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors ${selectedUserId === user.id ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground"} `}
             >
               <div className="relative">
                 <Avatar className="h-10 w-10">
