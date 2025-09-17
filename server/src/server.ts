@@ -6,7 +6,11 @@ import { Server } from "socket.io";
 
 const server = createServer(app);
 const io = new Server(server, {
-  cors: { origin: envs.FRONTEND_URL },
+  cors: {
+    origin: envs.FRONTEND_URL,
+    credentials: true,
+  },
+  transports: ["websocket", "polling"],
 });
 
 io.on("connection", (socket) => {
