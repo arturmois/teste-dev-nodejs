@@ -42,17 +42,6 @@ interface SocketProviderProps {
   children: ReactNode;
 }
 
-const convertSocketUserToUser = (
-  socketUser: SocketUserData,
-): SocketUserData => ({
-  id: socketUser.id,
-  name: socketUser.name,
-  username: socketUser.username,
-  avatar: socketUser.avatar,
-  isOnline: socketUser.isOnline,
-  lastSeen: socketUser.lastSeen,
-});
-
 export function SocketProvider({ children }: SocketProviderProps) {
   const { data: session } = useSession();
 
@@ -135,21 +124,17 @@ export function SocketProvider({ children }: SocketProviderProps) {
       };
       const onUsersOnline = (users: SocketUserData[]) => {
         console.log("Usuários online atualizados:", users.length);
-        const convertedUsers = users.map(convertSocketUserToUser);
-        setUsersOnline(convertedUsers);
+        setUsersOnline(users);
         setTimeout(() => {
-          userStatusCallbacksRef.current.forEach((callback) =>
-            callback(convertedUsers),
-          );
+          userStatusCallbacksRef.current.forEach((callback) => callback(users));
         }, 0);
       };
       const onUserOnline = (user: SocketUserData) => {
         console.log("Usuário online:", user.name);
-        const convertedUser = convertSocketUserToUser(user);
         setUsersOnline((prev) => {
           const exists = prev.some((u) => u.id === user.id);
           if (exists) return prev;
-          const newUsers = [...prev, convertedUser];
+          const newUsers = [...prev, user];
           setTimeout(() => {
             userStatusCallbacksRef.current.forEach((callback) =>
               callback(newUsers),
