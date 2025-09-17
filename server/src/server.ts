@@ -44,7 +44,11 @@ io.on(socketEvents.CONNECT, async (socket) => {
     where: { id: currentUser.id },
     data: { is_online: true, last_seen: new Date() },
   });
-  const users = await prisma.user.findMany();
+  const users = await prisma.user.findMany({
+    orderBy: {
+      is_online: "desc",
+    },
+  });
   const usersWithoutMe = users.filter((user) => user.id !== currentUser.id);
   const transformedUsers = usersWithoutMe.map((user) => ({
     id: user.id,
