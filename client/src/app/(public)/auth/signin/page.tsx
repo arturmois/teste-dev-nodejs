@@ -50,6 +50,7 @@ export default function SigninPage() {
       password: "",
     },
   });
+
   async function onSubmit(values: FormValues) {
     try {
       const result = await signIn("credentials", {
@@ -62,12 +63,13 @@ export default function SigninPage() {
         return router.push("/chat");
       }
       toast.error("Erro ao fazer login");
-      console.error("Signin error:", result?.error);
+      console.error("signin error:", result?.error);
     } catch (error) {
       toast.error("Erro inesperado");
-      console.error("Signin error:", error);
+      console.error("signin error:", error);
     }
   }
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">

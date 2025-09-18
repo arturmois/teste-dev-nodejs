@@ -13,12 +13,12 @@ const signup = async (formData: SignupSchema) => {
     });
     const data = await response.json();
     if (!response.ok) {
-      return { error: data.message || "Erro ao criar conta" };
+      return { error: data.message || "error creating account" };
     }
     return { success: true, data };
   } catch (error) {
-    console.error("Signup error:", error);
-    return { error: "Erro inesperado ao criar conta" };
+    console.error("signup error:", error);
+    return { error: "unexpected error while creating account" };
   }
 };
 

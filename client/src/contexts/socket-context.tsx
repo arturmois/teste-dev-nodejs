@@ -4,34 +4,20 @@ import { useSession } from "next-auth/react";
 import {
   createContext,
   ReactNode,
-  useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from "react";
 import { io, Socket } from "socket.io-client";
 
-import { socketEvents } from "@/types/socketEvents";
 import { type MessageData, SocketUserData } from "@/types/socketTypes";
-
-interface SocketState {
-  isConnected: boolean;
-  transport: string;
-}
 
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
-  transport: string;
   usersOnline: SocketUserData[];
   messages: MessageData[];
   sendMessage: (content: string, receiverId: string) => void;
-  clearMessages: () => void;
-  onMessage: (callback: (message: MessageData) => void) => () => void;
-  onUserStatusChange: (
-    callback: (users: SocketUserData[]) => void,
-  ) => () => void;
 }
 
 export const SocketContext = createContext<SocketContextType | null>(null);
@@ -42,183 +28,92 @@ interface SocketProviderProps {
 
 export function SocketProvider({ children }: SocketProviderProps) {
   const { data: session } = useSession();
-
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
   const [usersOnline, setUsersOnline] = useState<SocketUserData[]>([]);
   const [messages, setMessages] = useState<MessageData[]>([]);
-  const [socketState, setSocketState] = useState<SocketState>({
-    isConnected: false,
-    transport: "N/A",
-  });
 
-  const socketRef = useRef<Socket | null>(null);
-  const messageCallbacksRef = useRef<Set<(message: MessageData) => void>>(
-    new Set(),
-  );
-  const userStatusCallbacksRef = useRef<Set<(users: SocketUserData[]) => void>>(
-    new Set(),
-  );
-
-  const sendMessage = useCallback(
-    (content: string, receiverId: string) => {
-      if (socketRef.current && socketState.isConnected) {
-        const messageData = {
-          content,
-          receiverId,
-        };
-        socketRef.current.emit(socketEvents.SEND_MESSAGE, messageData);
-      }
-    },
-    [socketState.isConnected],
-  );
-
-  const clearMessages = useCallback(() => {
-    setMessages([]);
-  }, []);
-
-  const onMessage = useCallback((callback: (message: MessageData) => void) => {
-    messageCallbacksRef.current.add(callback);
-    return () => {
-      messageCallbacksRef.current.delete(callback);
-    };
-  }, []);
-
-  const onUserStatusChange = useCallback(
-    (callback: (users: SocketUserData[]) => void) => {
-      userStatusCallbacksRef.current.add(callback);
-      return () => {
-        userStatusCallbacksRef.current.delete(callback);
-      };
-    },
-    [],
-  );
-
-  useEffect(() => {
-    if (session?.token) {
-      socketRef.current = io(process.env.NEXT_PUBLIC_BACKEND_URL!, {
-        withCredentials: true,
-        auth: {
-          token: session.token,
-        },
+  const sendMessage = (content: string, receiverId: string) => {
+    if (socket && isConnected) {
+      socket.emit("sendMessage", {
+        content: content.trim(),
+        receiverId,
       });
-
-      const socket = socketRef.current;
-      const onConnect = () => {
-        setSocketState({
-          isConnected: true,
-          transport: socket.io.engine.transport.name,
-        });
-      };
-
-      const onDisconnect = () => {
-        setSocketState({
-          isConnected: false,
-          transport: "N/A",
-        });
-      };
-
-      const onConnectError = (error: Error) => {
-        console.error("Erro na conexão socket:", error.message);
-      };
-
-      const onUsersOnline = (users: SocketUserData[]) => {
-        setUsersOnline(users);
-        setTimeout(() => {
-          userStatusCallbacksRef.current.forEach((callback) => callback(users));
-        }, 0);
-      };
-
-      const onUserOnline = (user: SocketUserData) => {
-        setUsersOnline((prev) => {
-          const exists = prev.some((u) => u.id === user.id);
-          if (exists) return prev;
-          const newUsers = [user, ...prev];
-          setTimeout(() => {
-            userStatusCallbacksRef.current.forEach((callback) =>
-              callback(newUsers),
-            );
-          }, 0);
-          return newUsers;
-        });
-      };
-
-      const onUserOffline = (userId: string) => {
-        setUsersOnline((prev) => {
-          const newUsers = prev.filter((user) => user.id !== userId);
-          setTimeout(() => {
-            userStatusCallbacksRef.current.forEach((callback) =>
-              callback(newUsers),
-            );
-          }, 0);
-          return newUsers;
-        });
-      };
-
-      const onNewMessage = (message: MessageData) => {
-        setMessages((prev) => [...prev, message]);
-        messageCallbacksRef.current.forEach((callback) => callback(message));
-      };
-
-      const onSendMessage = (message: MessageData) => {
-        setMessages((prev) => [...prev, message]);
-        messageCallbacksRef.current.forEach((callback) => callback(message));
-      };
-
-      const onMessageSent = (message: MessageData) => {
-        setMessages((prev) => [...prev, message]);
-        messageCallbacksRef.current.forEach((callback) => callback(message));
-      };
-
-      const onMessagesHistory = (messages: MessageData[]) => {
-        setMessages(messages);
-      };
-
-      socket.on(socketEvents.CONNECT, onConnect);
-      socket.on(socketEvents.DISCONNECT, onDisconnect);
-      socket.on(socketEvents.CONNECT_ERROR, onConnectError);
-      socket.on(socketEvents.ONLINE_USERS, onUsersOnline);
-      socket.on(socketEvents.ONLINE_USER, onUserOnline);
-      socket.on(socketEvents.OFFLINE_USER, onUserOffline);
-      socket.on(socketEvents.NEW_MESSAGE, onNewMessage);
-      socket.on(socketEvents.MESSAGES_HISTORY, onMessagesHistory);
-      socket.on(socketEvents.SEND_MESSAGE, onSendMessage);
-      socket.on(socketEvents.MESSAGE_SENT, onMessageSent);
-
-      return () => {
-        socket.off(socketEvents.CONNECT, onConnect);
-        socket.off(socketEvents.DISCONNECT, onDisconnect);
-        socket.off(socketEvents.CONNECT_ERROR, onConnectError);
-        socket.off(socketEvents.ONLINE_USERS, onUsersOnline);
-        socket.off(socketEvents.ONLINE_USER, onUserOnline);
-        socket.off(socketEvents.OFFLINE_USER, onUserOffline);
-        socket.off(socketEvents.NEW_MESSAGE, onNewMessage);
-        socket.off(socketEvents.MESSAGES_HISTORY, onMessagesHistory);
-        socket.off(socketEvents.SEND_MESSAGE, onSendMessage);
-        socket.off(socketEvents.MESSAGE_SENT, onMessageSent);
-        socket.disconnect();
-        socketRef.current = null;
-      };
     }
-  }, [session?.token]);
+  };
 
   useEffect(() => {
-    const messageCallbacks = messageCallbacksRef.current;
-    const userStatusCallbacks = userStatusCallbacksRef.current;
+    if (!session?.user) return;
+
+    const newSocket = io(process.env.NEXT_PUBLIC_BACKEND_URL!, {
+      withCredentials: true,
+      auth: {
+        token: session.token,
+      },
+    });
+
+    newSocket.on("connect", () => {
+      console.log("connected to server");
+      setIsConnected(true);
+
+      newSocket.emit("userOnline", {
+        id: session.user.id,
+        name: session.user.name || "Usuário",
+        username: session.user.username || session.user.name || "Usuário",
+        avatar: session.user.avatar || "",
+      });
+    });
+
+    newSocket.on("disconnect", () => {
+      console.log("disconnected from server");
+      setIsConnected(false);
+    });
+
+    newSocket.on("newMessage", (message: MessageData) => {
+      setMessages((prev) => [...prev, message]);
+    });
+
+    newSocket.on("messageSent", (message: MessageData) => {
+      setMessages((prev) => [...prev, message]);
+    });
+
+    newSocket.on("messagesHistory", (recentMessages: MessageData[]) => {
+      setMessages(recentMessages);
+    });
+
+    newSocket.on("onlineUsers", (users: SocketUserData[]) => {
+      setUsersOnline(users);
+    });
+
+    newSocket.on("onlineUser", (user: SocketUserData) => {
+      setUsersOnline((prev) => {
+        const exists = prev.some((u) => u.id === user.id);
+        if (exists) return prev;
+        return [...prev, user];
+      });
+    });
+
+    newSocket.on("offlineUser", (userId: string) => {
+      setUsersOnline((prev) => prev.filter((user) => user.id !== userId));
+    });
+
+    newSocket.on("error", (error: string) => {
+      console.error("server error:", error);
+    });
+
+    setSocket(newSocket);
+
     return () => {
-      messageCallbacks.clear();
-      userStatusCallbacks.clear();
+      newSocket.disconnect();
     };
-  }, []);
+  }, [session]);
 
   const contextValue: SocketContextType = {
-    socket: socketRef.current,
-    isConnected: socketState.isConnected,
-    transport: socketState.transport,
+    socket,
+    isConnected,
     usersOnline,
     messages,
     sendMessage,
-    clearMessages,
-    onMessage,
-    onUserStatusChange,
   };
 
   return (

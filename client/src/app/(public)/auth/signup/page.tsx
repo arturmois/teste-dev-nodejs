@@ -37,6 +37,7 @@ export default function SignupPage() {
       confirmPassword: "",
     },
   });
+
   async function onSubmit(values: SignupSchema) {
     try {
       const result = await signup(values);
@@ -45,12 +46,13 @@ export default function SignupPage() {
         return router.push("/auth/signin");
       }
       toast.error("Erro ao criar conta");
-      console.error("Signup error:", result.error);
+      console.error("signup error:", result.error);
     } catch (error) {
       toast.error("Erro inesperado");
-      console.error("Signup error:", error);
+      console.error("signup error:", error);
     }
   }
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
