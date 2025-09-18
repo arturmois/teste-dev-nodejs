@@ -14,7 +14,6 @@ passport.use(
         if (!user) {
           return done(null, false, { message: "User not found" });
         }
-
         const isPasswordValid = await bcrypt.compare(passsword, user.password);
         if (!isPasswordValid) {
           return done(null, false, { message: "Invalid credentials" });
@@ -36,15 +35,12 @@ passport.use(
     },
     async (jwtPayload, done) => {
       try {
-        console.log(jwtPayload);
         const user = await prisma.user.findUnique({
           where: { id: jwtPayload.userId },
         });
-        console.log(user);
         if (!user) {
           return done(null, false, { message: "User not found" });
         }
-
         const { password, ...userWithoutPassword } = user;
         return done(null, userWithoutPassword);
       } catch (error) {
