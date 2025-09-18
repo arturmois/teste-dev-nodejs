@@ -1,5 +1,4 @@
 export const socketEvents = {
-  HELLO: "hello",
   CONNECT: "connect",
   CONNECT_ERROR: "connect_error",
   DISCONNECT: "disconnect",
@@ -7,6 +6,7 @@ export const socketEvents = {
   ONLINE_USER: "online_user",
   OFFLINE_USER: "offline_user",
   NEW_MESSAGE: "new_message",
+  MESSAGES_HISTORY: "messages_history",
   SEND_MESSAGE: "send_message",
   MESSAGE_SENT: "message_sent",
   USER_TYPING: "user_typing",

@@ -20,13 +20,15 @@ import { UserSidebar } from "./_components/user-sidebar";
 export default function ChatPage() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isMobile = useMobile();
-  const { usersOnline } = useOnlineUsers();
 
+  const { usersOnline } = useOnlineUsers();
   const allUsers: SocketUserData[] = usersOnline.length > 0 ? usersOnline : [];
   const selectedUser = allUsers.find(
     (user: SocketUserData) => user.id === selectedUserId,
   );
+
+  const isMobile = useMobile();
+
   const handleUserSelect = (userId: string) => {
     setSelectedUserId(userId);
     if (isMobile) {
@@ -39,7 +41,6 @@ export default function ChatPage() {
       <div className="fixed top-0 right-0 left-0 z-50">
         <ChatHeader onMenuClick={() => setSidebarOpen(true)} />
       </div>
-
       <div className="hidden w-80 overflow-hidden pt-14 lg:block">
         <UserSidebar
           users={allUsers}
@@ -47,7 +48,6 @@ export default function ChatPage() {
           onUserSelect={handleUserSelect}
         />
       </div>
-
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="bg-sidebar w-[85%] p-0">
           <SheetHeader>
@@ -63,13 +63,9 @@ export default function ChatPage() {
           />
         </SheetContent>
       </Sheet>
-
       <div className="flex flex-1 flex-col overflow-hidden pt-14 lg:pl-0">
         <div className="flex-1 overflow-hidden">
-          <ChatArea
-            selectedUser={selectedUser}
-            currentUser={selectedUser as SocketUserData}
-          />
+          <ChatArea selectedUser={selectedUser} />
         </div>
       </div>
     </div>

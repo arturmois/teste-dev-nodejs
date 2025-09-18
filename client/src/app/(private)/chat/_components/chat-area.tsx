@@ -1,6 +1,7 @@
 "use client";
 
 import { Paperclip, Send, Smile } from "lucide-react";
+import { useSession } from "next-auth/react";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -13,53 +14,40 @@ import type { MessageData, SocketUserData } from "@/types/socketTypes";
 
 interface ChatAreaProps {
   selectedUser?: SocketUserData;
-  currentUser: SocketUserData;
 }
 
-export function ChatArea({ selectedUser, currentUser }: ChatAreaProps) {
-  const [localMessages, setLocalMessages] = useState<MessageData[]>([]);
+export function ChatArea({ selectedUser }: ChatAreaProps) {
+  const { data: session } = useSession();
   const [newMessage, setNewMessage] = useState("");
+
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const { messages: socketMessages, sendMessage: sendSocketMessage } =
-    useChatMessages(selectedUser?.id);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const allMessages = useMemo(
-    () => [
-      ...localMessages,
-      ...socketMessages.map((msg: MessageData) => ({
-        id: msg.id,
-        senderId: msg.senderId,
-        content: msg.content,
-        timestamp: new Date(msg.timestamp),
-      })),
-    ],
-    [localMessages, socketMessages],
-  );
+  const { messages: socketMessages, sendMessage: sendSocketMessage } =
+    useChatMessages();
+
+  const filteredMessages = useMemo(() => {
+    if (!selectedUser?.id) return [];
+    return socketMessages.filter(
+      (msg: MessageData) =>
+        (msg.senderId === selectedUser.id &&
+          msg.receiverId === session?.user.id) ||
+        (msg.senderId === session?.user.id &&
+          msg.receiverId === selectedUser.id),
+    );
+  }, [socketMessages, selectedUser?.id, session?.user.id]);
 
   useEffect(() => {
     scrollToBottom();
-  }, [allMessages]);
+  }, [filteredMessages]);
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedUser) return;
-
-    sendSocketMessage(newMessage.trim());
-
-    const message: MessageData = {
-      id: Date.now().toString(),
-      senderId: currentUser.id,
-      content: newMessage.trim(),
-      receiverId: selectedUser.id,
-      timestamp: new Date().toISOString(),
-    };
-
-    setLocalMessages((prev) => [...prev, message]);
+    sendSocketMessage(newMessage.trim(), selectedUser.id);
     setNewMessage("");
     setTimeout(scrollToBottom, 100);
   };
@@ -113,14 +101,12 @@ export function ChatArea({ selectedUser, currentUser }: ChatAreaProps) {
           <p className="text-muted-foreground text-xs">Online</p>
         </div>
       </div>
-      {/* Área de mensagens com altura fixa */}
       <div className="flex-1 overflow-hidden bg-orange-100">
         <ScrollArea className="h-full p-2" ref={scrollAreaRef}>
           <div className="space-y-4">
-            {allMessages.map((message) => {
-              const isCurrentUser = message.senderId === currentUser.id;
-              const sender = isCurrentUser ? currentUser : selectedUser;
-
+            {filteredMessages.map((message) => {
+              const isCurrentUser = message.senderId === session?.user.id;
+              const sender = isCurrentUser ? session?.user : selectedUser;
               return (
                 <div
                   key={message.id}
@@ -128,12 +114,13 @@ export function ChatArea({ selectedUser, currentUser }: ChatAreaProps) {
                 >
                   <Avatar className="h-8 w-8 flex-shrink-0">
                     <AvatarImage
-                      src={sender.avatar || "/placeholder.svg"}
-                      alt={sender.name}
+                      src={sender?.avatar || "/placeholder.svg"}
+                      alt={sender?.name || "User"}
                     />
-                    <AvatarFallback>{sender.name.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>
+                      {sender?.name?.charAt(0) || "U"}
+                    </AvatarFallback>
                   </Avatar>
-
                   <div
                     className={`flex flex-col ${isCurrentUser ? "items-end" : "items-start"}`}
                   >
@@ -157,13 +144,11 @@ export function ChatArea({ selectedUser, currentUser }: ChatAreaProps) {
           </div>
         </ScrollArea>
       </div>
-
       <div className="bg-background border-border sticky bottom-0 border-t p-4">
         <div className="flex items-end gap-2">
           <Button variant="ghost" size="sm">
             <Paperclip className="h-4 w-4" />
           </Button>
-
           <div className="relative flex-1">
             <Input
               placeholder="Digite sua mensagem..."
@@ -180,7 +165,6 @@ export function ChatArea({ selectedUser, currentUser }: ChatAreaProps) {
               <Smile className="h-4 w-4" />
             </Button>
           </div>
-
           <Button
             onClick={handleSendMessage}
             disabled={!newMessage.trim()}

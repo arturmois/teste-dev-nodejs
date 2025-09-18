@@ -26,10 +26,8 @@ interface SocketContextType {
   transport: string;
   usersOnline: SocketUserData[];
   messages: MessageData[];
-
   sendMessage: (content: string, receiverId: string) => void;
   clearMessages: () => void;
-
   onMessage: (callback: (message: MessageData) => void) => () => void;
   onUserStatusChange: (
     callback: (users: SocketUserData[]) => void,
@@ -45,7 +43,6 @@ interface SocketProviderProps {
 export function SocketProvider({ children }: SocketProviderProps) {
   const { data: session } = useSession();
 
-  const socketRef = useRef<Socket | null>(null);
   const [usersOnline, setUsersOnline] = useState<SocketUserData[]>([]);
   const [messages, setMessages] = useState<MessageData[]>([]);
   const [socketState, setSocketState] = useState<SocketState>({
@@ -53,6 +50,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
     transport: "N/A",
   });
 
+  const socketRef = useRef<Socket | null>(null);
   const messageCallbacksRef = useRef<Set<(message: MessageData) => void>>(
     new Set(),
   );
@@ -104,7 +102,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
       });
 
       const socket = socketRef.current;
-
       const onConnect = () => {
         setSocketState({
           isConnected: true,
@@ -171,15 +168,18 @@ export function SocketProvider({ children }: SocketProviderProps) {
         messageCallbacksRef.current.forEach((callback) => callback(message));
       };
 
+      const onMessagesHistory = (messages: MessageData[]) => {
+        setMessages(messages);
+      };
+
       socket.on(socketEvents.CONNECT, onConnect);
       socket.on(socketEvents.DISCONNECT, onDisconnect);
       socket.on(socketEvents.CONNECT_ERROR, onConnectError);
-
       socket.on(socketEvents.ONLINE_USERS, onUsersOnline);
       socket.on(socketEvents.ONLINE_USER, onUserOnline);
       socket.on(socketEvents.OFFLINE_USER, onUserOffline);
-
       socket.on(socketEvents.NEW_MESSAGE, onNewMessage);
+      socket.on(socketEvents.MESSAGES_HISTORY, onMessagesHistory);
       socket.on(socketEvents.SEND_MESSAGE, onSendMessage);
       socket.on(socketEvents.MESSAGE_SENT, onMessageSent);
 
@@ -187,12 +187,11 @@ export function SocketProvider({ children }: SocketProviderProps) {
         socket.off(socketEvents.CONNECT, onConnect);
         socket.off(socketEvents.DISCONNECT, onDisconnect);
         socket.off(socketEvents.CONNECT_ERROR, onConnectError);
-
         socket.off(socketEvents.ONLINE_USERS, onUsersOnline);
         socket.off(socketEvents.ONLINE_USER, onUserOnline);
         socket.off(socketEvents.OFFLINE_USER, onUserOffline);
-
         socket.off(socketEvents.NEW_MESSAGE, onNewMessage);
+        socket.off(socketEvents.MESSAGES_HISTORY, onMessagesHistory);
         socket.off(socketEvents.SEND_MESSAGE, onSendMessage);
         socket.off(socketEvents.MESSAGE_SENT, onMessageSent);
         socket.disconnect();
@@ -204,7 +203,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
   useEffect(() => {
     const messageCallbacks = messageCallbacksRef.current;
     const userStatusCallbacks = userStatusCallbacksRef.current;
-
     return () => {
       messageCallbacks.clear();
       userStatusCallbacks.clear();
