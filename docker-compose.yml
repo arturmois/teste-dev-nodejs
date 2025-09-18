@@ -21,11 +21,11 @@ services:
       retries: 5
       start_period: 60s
 
-  api:
+  server:
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: chat-api
+    container_name: chat-server
     restart: unless-stopped
     ports:
       - "3001:3001"
@@ -33,7 +33,7 @@ services:
       - NODE_ENV=production
       - PORT=3001
       - DATABASE_URL=mongodb://mongodb:27017/chatapp?replicaSet=rs0
-      - FRONTEND_URL=http://localhost:3000
+      - CLIENT_URL=http://client:3000
       - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
     depends_on:
       mongodb:
@@ -42,6 +42,22 @@ services:
       - chat-network
     volumes:
       - ./server/.env:/app/.env:ro
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: chat-client
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SERVER_URL=http://localhost:3001
+    depends_on:
+      - server
+    networks:
+      - chat-network
 
 volumes:
   mongodb_data:
