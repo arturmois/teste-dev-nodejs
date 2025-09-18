@@ -40,15 +40,18 @@ io.use(async (socket, next) => {
 io.on(socketEvents.CONNECT, async (socket) => {
   const currentUser = socket.data.user;
   console.log(`User connected: ${currentUser.name} (${currentUser.id})`);
+
   await prisma.user.update({
     where: { id: currentUser.id },
     data: { is_online: true, last_seen: new Date() },
   });
+
   const users = await prisma.user.findMany({
     orderBy: {
       is_online: "desc",
     },
   });
+
   const usersWithoutMe = users.filter((user) => user.id !== currentUser.id);
   const transformedUsers = usersWithoutMe.map((user) => ({
     id: user.id,
@@ -70,6 +73,25 @@ io.on(socketEvents.CONNECT, async (socket) => {
     avatar: currentUser.avatar,
   });
 
+  const messages = await prisma.message.findMany({
+    where: {
+      OR: [{ sender_id: currentUser.id }, { receiver_id: currentUser.id }],
+    },
+    orderBy: {
+      created_at: "desc",
+    },
+  });
+  if (messages.length > 0) {
+    const transformedMessages = messages.map((message) => ({
+      id: message.id,
+      content: message.content,
+      senderId: message.sender_id,
+      receiverId: message.receiver_id,
+      timestamp: message.created_at.toISOString(),
+    }));
+    socket.emit(socketEvents.MESSAGES_HISTORY, transformedMessages);
+  }
+
   socket.on(socketEvents.SEND_MESSAGE, async (data: MessageData) => {
     const message = await prisma.message.create({
       data: {
@@ -78,22 +100,15 @@ io.on(socketEvents.CONNECT, async (socket) => {
         receiver_id: data.receiverId,
       },
     });
-
     const messageToSend = {
       id: message.id,
       content: message.content,
-      sender_id: message.sender_id,
-      receiver_id: message.receiver_id,
+      senderId: message.sender_id,
+      receiverId: message.receiver_id,
       timestamp: message.created_at.toISOString(),
     };
-
     socket.broadcast.emit(socketEvents.NEW_MESSAGE, messageToSend);
-
     socket.emit(socketEvents.MESSAGE_SENT, messageToSend);
-  });
-
-  socket.on(socketEvents.HELLO, (data) => {
-    console.log(data);
   });
 
   socket.on(socketEvents.DISCONNECT, async () => {
