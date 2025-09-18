@@ -78,7 +78,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
   useEffect(() => {
     if (!session?.user) return;
 
-    const newSocket = io(process.env.NEXT_PUBLIC_BACKEND_URL!, {
+    const newSocket = io(process.env.NEXT_PUBLIC_SERVER_URL!, {
       withCredentials: true,
       auth: {
         token: session.token,
