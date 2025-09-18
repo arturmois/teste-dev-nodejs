@@ -88,13 +88,20 @@ export function SocketProvider({ children }: SocketProviderProps) {
     newSocket.on("onlineUser", (user: SocketUserData) => {
       setUsersOnline((prev) => {
         const exists = prev.some((u) => u.id === user.id);
-        if (exists) return prev;
-        return [...prev, user];
+        if (exists)
+          return prev.map((u) =>
+            u.id === user.id ? { ...user, isOnline: true } : u,
+          );
+        return [user, ...prev];
       });
     });
 
     newSocket.on("offlineUser", (userId: string) => {
-      setUsersOnline((prev) => prev.filter((user) => user.id !== userId));
+      setUsersOnline((prev) =>
+        prev.map((user) =>
+          user.id !== userId ? user : { ...user, isOnline: false },
+        ),
+      );
     });
 
     newSocket.on("error", (error: string) => {
