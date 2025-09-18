@@ -1,20 +1,16 @@
-import jwt from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
 import envs from "../config/envs";
 
 class Signin {
+  private EXPIRES_IN: SignOptions["expiresIn"] = "24h";
+
   async execute(user: any) {
-    const { id, name, username, avatar } = user;
+    const { id } = user;
     const token = jwt.sign({ userId: id }, envs.JWT_SECRET, {
-      expiresIn: "24h",
+      expiresIn: this.EXPIRES_IN,
     });
     return {
       token,
-      user: {
-        id,
-        name,
-        username,
-        avatar,
-      },
     };
   }
 }
