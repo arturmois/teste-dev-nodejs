@@ -16,8 +16,8 @@ const ButtonLogout = () => {
   };
   return (
     <Button onClick={handleLogout}>
+      <span className="hidden md:block">Sair</span>
       <LogOut className="h-4 w-4" />
-      Logout
     </Button>
   );
 };

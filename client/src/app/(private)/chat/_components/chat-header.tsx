@@ -25,7 +25,7 @@ export function ChatHeader({ onMenuClick }: ChatHeaderProps) {
             <Menu className="h-5 w-5" />
           </Button>
         )}
-        <div className="pl-30">
+        <div className="md:pl-30">
           <Link href="/chat">
             <Image
               src="/logo.png"
