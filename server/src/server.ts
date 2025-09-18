@@ -5,7 +5,7 @@ import { createServer } from "node:http";
 import { Server } from "socket.io";
 import prisma from "./db/prisma";
 import jwt from "jsonwebtoken";
-import { MessageData } from "./types/socketTypes";
+import { MessageData, Message, SocketUserData } from "./types/socketTypes";
 import { socketEvents } from "./types/socketEvents";
 
 const server = createServer(app);
@@ -39,7 +39,7 @@ io.use(async (socket, next) => {
 
 io.on(socketEvents.CONNECT, async (socket) => {
   const currentUser = socket.data.user;
-  console.log(`User connected: ${currentUser.name} (${currentUser.id})`);
+  console.log(`user connected: ${currentUser.name} (${currentUser.id})`);
 
   await prisma.user.update({
     where: { id: currentUser.id },
@@ -47,30 +47,32 @@ io.on(socketEvents.CONNECT, async (socket) => {
   });
 
   const users = await prisma.user.findMany({
+    where: {
+      id: { not: currentUser.id },
+    },
     orderBy: {
       is_online: "desc",
     },
   });
 
-  const usersWithoutMe = users.filter((user) => user.id !== currentUser.id);
-  const transformedUsers = usersWithoutMe.map((user) => ({
+  const transformedUsers: SocketUserData[] = users.map((user) => ({
     id: user.id,
     name: user.name,
     username: user.username,
     isOnline: user.is_online,
     lastSeen: user.last_seen,
-    avatar: user.avatar,
+    avatar: user.avatar || "",
   }));
 
-  socket.emit(socketEvents.ONLINE_USERS, transformedUsers);
+  socket.emit("onlineUsers", transformedUsers);
 
-  socket.broadcast.emit(socketEvents.ONLINE_USER, {
+  socket.broadcast.emit("onlineUser", {
     id: currentUser.id,
     name: currentUser.name,
     username: currentUser.username,
     isOnline: true,
     lastSeen: new Date(),
-    avatar: currentUser.avatar,
+    avatar: currentUser.avatar || "",
   });
 
   const messages = await prisma.message.findMany({
@@ -78,50 +80,60 @@ io.on(socketEvents.CONNECT, async (socket) => {
       OR: [{ sender_id: currentUser.id }, { receiver_id: currentUser.id }],
     },
     orderBy: {
-      created_at: "desc",
+      created_at: "asc",
     },
+    take: 100,
   });
+
   if (messages.length > 0) {
-    const transformedMessages = messages.map((message) => ({
+    const transformedMessages: Message[] = messages.map((message) => ({
       id: message.id,
       content: message.content,
       senderId: message.sender_id,
       receiverId: message.receiver_id,
       timestamp: message.created_at.toISOString(),
     }));
-    socket.emit(socketEvents.MESSAGES_HISTORY, transformedMessages);
+    socket.emit("messagesHistory", transformedMessages);
   }
 
-  socket.on(socketEvents.SEND_MESSAGE, async (data: MessageData) => {
-    const message = await prisma.message.create({
-      data: {
-        content: data.content,
-        sender_id: currentUser.id,
-        receiver_id: data.receiverId,
-      },
-    });
-    const messageToSend = {
-      id: message.id,
-      content: message.content,
-      senderId: message.sender_id,
-      receiverId: message.receiver_id,
-      timestamp: message.created_at.toISOString(),
-    };
-    socket.broadcast.emit(socketEvents.NEW_MESSAGE, messageToSend);
-    socket.emit(socketEvents.MESSAGE_SENT, messageToSend);
+  socket.on("sendMessage", async (data: MessageData) => {
+    try {
+      const message = await prisma.message.create({
+        data: {
+          content: data.content,
+          sender_id: currentUser.id,
+          receiver_id: data.receiverId,
+        },
+      });
+
+      const messageToSend: Message = {
+        id: message.id,
+        content: message.content,
+        senderId: message.sender_id,
+        receiverId: message.receiver_id,
+        timestamp: message.created_at.toISOString(),
+      };
+
+      socket.emit("messageSent", messageToSend);
+      socket.broadcast.emit("newMessage", messageToSend);
+    } catch (error) {
+      console.error("error sending message:", error);
+      socket.emit("error", "Error sending message");
+    }
   });
 
-  socket.on(socketEvents.DISCONNECT, async () => {
-    const currentUser = socket.data.user;
-    console.log(`User disconnected: ${currentUser.name} (${currentUser.id})`);
+  socket.on("disconnect", async () => {
+    console.log(`user disconnected: ${currentUser.name} (${currentUser.id})`);
+
     await prisma.user.update({
       where: { id: currentUser.id },
       data: { is_online: false, last_seen: new Date() },
     });
-    socket.broadcast.emit(socketEvents.OFFLINE_USER, currentUser.id);
+
+    socket.broadcast.emit("offlineUser", currentUser.id);
   });
 });
 
 server.listen(envs.PORT, () => {
-  console.log(`Server is running on port ${envs.PORT}`);
+  console.log(`Server running on port ${envs.PORT}`);
 });
