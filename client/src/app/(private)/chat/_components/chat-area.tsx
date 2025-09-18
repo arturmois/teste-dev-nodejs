@@ -29,7 +29,6 @@ export function ChatArea({ selectedUser }: ChatAreaProps) {
 
   const { messages: socketMessages, sendMessage: sendSocketMessage } =
     useChatMessages();
-
   const filteredMessages = useMemo(() => {
     if (!selectedUser?.id) return [];
     return socketMessages.filter(

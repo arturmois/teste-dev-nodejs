@@ -3,6 +3,7 @@ import routes from "./routes";
 import cors from "cors";
 import helmet from "helmet";
 import envs from "./config/envs";
+import passport from "./config/passport";
 
 const app = express();
 
@@ -14,6 +15,8 @@ app.use(
   })
 );
 app.use(helmet());
+
+app.use(passport.initialize());
 
 app.get("/", (req, res) => {
   res.send("Hello World");
