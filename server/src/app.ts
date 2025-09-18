@@ -10,7 +10,7 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: envs.FRONTEND_URL,
+    origin: [envs.CLIENT_URL, "http://localhost:3000"],
     credentials: true,
   })
 );

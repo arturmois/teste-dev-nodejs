@@ -43,7 +43,7 @@ if (cluster.isPrimary) {
   const httpServer = http.createServer(app);
   const io = new Server(httpServer, {
     cors: {
-      origin: envs.FRONTEND_URL,
+      origin: [envs.CLIENT_URL, "http://localhost:3000"],
       credentials: true,
     },
     transports: ["websocket", "polling"],

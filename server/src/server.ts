@@ -11,7 +11,7 @@ import { socketEvents } from "./types/socketEvents";
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: envs.FRONTEND_URL,
+    origin: [envs.CLIENT_URL, "http://localhost:3000"],
     credentials: true,
   },
   transports: ["websocket", "polling"],

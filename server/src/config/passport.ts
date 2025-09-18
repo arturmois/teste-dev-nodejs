@@ -8,17 +8,17 @@ import envs from "./envs";
 passport.use(
   new LocalStrategy(
     { usernameField: "username", passwordField: "password", session: false },
-    async (username, passsword, done) => {
+    async (username, password, done) => {
       try {
         const user = await prisma.user.findUnique({ where: { username } });
         if (!user) {
           return done(null, false, { message: "User not found" });
         }
-        const isPasswordValid = await bcrypt.compare(passsword, user.password);
+        const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
           return done(null, false, { message: "Invalid credentials" });
         }
-        const { password, ...userWithoutPassword } = user;
+        const { password: _, ...userWithoutPassword } = user;
         return done(null, userWithoutPassword);
       } catch (error) {
         return done(error);
@@ -41,7 +41,7 @@ passport.use(
         if (!user) {
           return done(null, false, { message: "User not found" });
         }
-        const { password, ...userWithoutPassword } = user;
+        const { password: _, ...userWithoutPassword } = user;
         return done(null, userWithoutPassword);
       } catch (error) {
         return done(error);
