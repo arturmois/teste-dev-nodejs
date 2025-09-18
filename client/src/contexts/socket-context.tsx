@@ -140,7 +140,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
         setUsersOnline((prev) => {
           const exists = prev.some((u) => u.id === user.id);
           if (exists) return prev;
-          const newUsers = [...prev, user];
+          const newUsers = [user, ...prev];
           setTimeout(() => {
             userStatusCallbacksRef.current.forEach((callback) =>
               callback(newUsers),
