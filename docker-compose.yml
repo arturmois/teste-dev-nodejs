@@ -6,14 +6,42 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password123
-      MONGO_INITDB_DATABASE: chatapp
+      - MONGO_INITDB_DATABASE=chatapp
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     volumes:
       - mongodb_data:/data/db
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./mongo-replica-init.js:/docker-entrypoint-initdb.d/mongo-replica-init.js:ro
     networks:
       - chat-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: chat-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=mongodb://mongodb:27017/chatapp?replicaSet=rs0
+      - FRONTEND_URL=http://localhost:3000
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - chat-network
+    volumes:
+      - ./server/.env:/app/.env:ro
 
 volumes:
   mongodb_data:
