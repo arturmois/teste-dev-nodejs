@@ -15,8 +15,14 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-bg": "var(--popover)",
           "--normal-text": "var(--popover-foreground)",
           "--normal-border": "var(--border)",
+          "--normal-radius": "var(--radius)",
         } as React.CSSProperties
       }
+      toastOptions={{
+        actionButtonStyle: {
+          backgroundColor: "hsl(var(--primary))",
+        },
+      }}
       {...props}
     />
   );

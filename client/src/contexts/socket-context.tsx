@@ -5,12 +5,14 @@ import {
   createContext,
   ReactNode,
   type RefObject,
+  useCallback,
   useContext,
   useEffect,
   useRef,
   useState,
 } from "react";
 import { io, Socket } from "socket.io-client";
+import { toast } from "sonner";
 
 import { type MessageData, SocketUserData } from "@/types/socketTypes";
 
@@ -51,6 +53,28 @@ export function SocketProvider({ children }: SocketProviderProps) {
     }
   };
 
+  const showNotification = useCallback(
+    (senderId: string) => {
+      if (unreadMessages[senderId] > 0) return;
+      toast("Notificação de mensagem recebida", {
+        description: "Você tem uma nova mensagem",
+        action: {
+          label: "Ver",
+          onClick: () => console.log("Ver"),
+        },
+        style: {
+          backgroundColor: "var(--primary)",
+          color: "var(--primary-foreground)",
+          opacity: 0.85,
+        },
+      });
+    },
+    [unreadMessages],
+  );
+
+  const showNotificationRef = useRef(showNotification);
+  showNotificationRef.current = showNotification;
+
   useEffect(() => {
     if (!session?.user) return;
 
@@ -84,6 +108,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
         message.senderId !== selectedUserId.current &&
         message.receiverId === session?.user.id
       ) {
+        showNotificationRef.current(message.senderId);
         setUnreadMessages((prev) => ({
           ...prev,
           [message.senderId]: (prev[message.senderId] || 0) + 1,

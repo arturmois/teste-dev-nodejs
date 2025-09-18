@@ -145,29 +145,19 @@ export function ChatArea({ selectedUser }: ChatAreaProps) {
       </div>
       <div className="bg-background border-border sticky bottom-0 border-t p-4">
         <div className="flex items-end gap-2">
-          <Button variant="ghost" size="sm">
-            <Paperclip className="h-4 w-4" />
-          </Button>
           <div className="relative flex-1">
             <Input
               placeholder="Digite sua mensagem..."
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="pr-10"
+              onKeyDown={handleKeyPress}
+              className="h-10 pr-10"
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-1/2 right-1 -translate-y-1/2 transform"
-            >
-              <Smile className="h-4 w-4" />
-            </Button>
           </div>
           <Button
             onClick={handleSendMessage}
             disabled={!newMessage.trim()}
-            size="sm"
+            size="lg"
           >
             <Send className="h-4 w-4" />
           </Button>
