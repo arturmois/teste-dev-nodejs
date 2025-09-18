@@ -8,9 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useChatMessages } from "@/hooks/use-chat-messages";
 import type { MessageData, SocketUserData } from "@/types/socketTypes";
-
-import { useChatMessages } from "../../../../hooks/use-chat-messages";
 
 interface ChatAreaProps {
   selectedUser?: SocketUserData;

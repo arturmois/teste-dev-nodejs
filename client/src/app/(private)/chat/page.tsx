@@ -10,15 +10,14 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useMobile } from "@/hooks/use-mobile";
+import { useOnlineUsers } from "@/hooks/use-online-users";
 import type { SocketUserData } from "@/types/socketTypes";
 
-import { useOnlineUsers } from "../../../hooks/use-online-users";
 import { ChatArea } from "./_components/chat-area";
 import { ChatHeader } from "./_components/chat-header";
 import { UserSidebar } from "./_components/user-sidebar";
 
 export default function ChatPage() {
-  console.log("ChatPage render");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useMobile();

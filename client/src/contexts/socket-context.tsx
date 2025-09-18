@@ -96,8 +96,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
 
   useEffect(() => {
     if (session?.token) {
-      console.log("Iniciando conexão socket...");
-
       socketRef.current = io(process.env.NEXT_PUBLIC_BACKEND_URL!, {
         withCredentials: true,
         auth: {
@@ -108,7 +106,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
       const socket = socketRef.current;
 
       const onConnect = () => {
-        console.log("Socket conectado");
         setSocketState({
           isConnected: true,
           transport: socket.io.engine.transport.name,
@@ -116,7 +113,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
       };
 
       const onDisconnect = () => {
-        console.log("Socket desconectado");
         setSocketState({
           isConnected: false,
           transport: "N/A",
@@ -128,7 +124,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
       };
 
       const onUsersOnline = (users: SocketUserData[]) => {
-        console.log("Usuários online atualizados:", users.length);
         setUsersOnline(users);
         setTimeout(() => {
           userStatusCallbacksRef.current.forEach((callback) => callback(users));
@@ -136,7 +131,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
       };
 
       const onUserOnline = (user: SocketUserData) => {
-        console.log("Usuário online:", user.name);
         setUsersOnline((prev) => {
           const exists = prev.some((u) => u.id === user.id);
           if (exists) return prev;
@@ -151,7 +145,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
       };
 
       const onUserOffline = (userId: string) => {
-        console.log("Usuário offline:", userId);
         setUsersOnline((prev) => {
           const newUsers = prev.filter((user) => user.id !== userId);
           setTimeout(() => {
@@ -164,19 +157,16 @@ export function SocketProvider({ children }: SocketProviderProps) {
       };
 
       const onNewMessage = (message: MessageData) => {
-        console.log("Nova mensagem recebida:", message);
         setMessages((prev) => [...prev, message]);
         messageCallbacksRef.current.forEach((callback) => callback(message));
       };
 
       const onSendMessage = (message: MessageData) => {
-        console.log("Mensagem enviada:", message);
         setMessages((prev) => [...prev, message]);
         messageCallbacksRef.current.forEach((callback) => callback(message));
       };
 
       const onMessageSent = (message: MessageData) => {
-        console.log("Mensagem enviada confirmada:", message);
         setMessages((prev) => [...prev, message]);
         messageCallbacksRef.current.forEach((callback) => callback(message));
       };
@@ -194,7 +184,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
       socket.on(socketEvents.MESSAGE_SENT, onMessageSent);
 
       return () => {
-        console.log("Limpando socket...");
         socket.off(socketEvents.CONNECT, onConnect);
         socket.off(socketEvents.DISCONNECT, onDisconnect);
         socket.off(socketEvents.CONNECT_ERROR, onConnectError);
