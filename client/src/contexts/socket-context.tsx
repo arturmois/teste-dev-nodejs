@@ -4,8 +4,10 @@ import { useSession } from "next-auth/react";
 import {
   createContext,
   ReactNode,
+  type RefObject,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { io, Socket } from "socket.io-client";
@@ -18,6 +20,9 @@ interface SocketContextType {
   usersOnline: SocketUserData[];
   messages: MessageData[];
   sendMessage: (content: string, receiverId: string) => void;
+  unreadMessages: Record<string, number>;
+  setUnreadMessages: (unreadMessages: Record<string, number>) => void;
+  selectedUserId: RefObject<string | null>;
 }
 
 export const SocketContext = createContext<SocketContextType | null>(null);
@@ -32,6 +37,10 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [usersOnline, setUsersOnline] = useState<SocketUserData[]>([]);
   const [messages, setMessages] = useState<MessageData[]>([]);
+  const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>(
+    {},
+  );
+  const selectedUserId = useRef<string | null>(null);
 
   const sendMessage = (content: string, receiverId: string) => {
     if (socket && isConnected) {
@@ -71,6 +80,15 @@ export function SocketProvider({ children }: SocketProviderProps) {
 
     newSocket.on("newMessage", (message: MessageData) => {
       setMessages((prev) => [...prev, message]);
+      if (
+        message.senderId !== selectedUserId.current &&
+        message.receiverId === session?.user.id
+      ) {
+        setUnreadMessages((prev) => ({
+          ...prev,
+          [message.senderId]: (prev[message.senderId] || 0) + 1,
+        }));
+      }
     });
 
     newSocket.on("messageSent", (message: MessageData) => {
@@ -121,6 +139,9 @@ export function SocketProvider({ children }: SocketProviderProps) {
     usersOnline,
     messages,
     sendMessage,
+    unreadMessages,
+    setUnreadMessages,
+    selectedUserId,
   };
 
   return (

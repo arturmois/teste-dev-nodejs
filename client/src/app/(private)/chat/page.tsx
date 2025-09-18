@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { useMobile } from "@/hooks/use-mobile";
 import { useOnlineUsers } from "@/hooks/use-online-users";
+import { useSocket } from "@/hooks/use-socket";
 import type { SocketUserData } from "@/types/socketTypes";
 
 import { ChatArea } from "./_components/chat-area";
@@ -18,19 +19,19 @@ import { ChatHeader } from "./_components/chat-header";
 import { UserSidebar } from "./_components/user-sidebar";
 
 export default function ChatPage() {
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
+  const { unreadMessages, setUnreadMessages, selectedUserId } = useSocket();
   const { usersOnline } = useOnlineUsers();
   const allUsers: SocketUserData[] = usersOnline.length > 0 ? usersOnline : [];
   const selectedUser = allUsers.find(
-    (user: SocketUserData) => user.id === selectedUserId,
+    (user: SocketUserData) => user.id === selectedUserId.current,
   );
 
   const isMobile = useMobile();
 
   const handleUserSelect = (userId: string) => {
-    setSelectedUserId(userId);
+    selectedUserId.current = userId;
+    setUnreadMessages({ ...unreadMessages, [userId]: 0 });
     if (isMobile) {
       setSidebarOpen(false);
     }
@@ -44,8 +45,9 @@ export default function ChatPage() {
       <div className="hidden w-80 overflow-hidden pt-14 lg:block">
         <UserSidebar
           users={allUsers}
-          selectedUserId={selectedUserId}
+          selectedUserId={selectedUserId.current}
           onUserSelect={handleUserSelect}
+          unreadMessages={unreadMessages}
         />
       </div>
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -58,8 +60,9 @@ export default function ChatPage() {
           </SheetHeader>
           <UserSidebar
             users={allUsers}
-            selectedUserId={selectedUserId}
+            selectedUserId={selectedUserId.current}
             onUserSelect={handleUserSelect}
+            unreadMessages={unreadMessages}
           />
         </SheetContent>
       </Sheet>
