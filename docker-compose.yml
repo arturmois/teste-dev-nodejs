@@ -1,4 +1,46 @@
 services:
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb-dev
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=app-database
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb-setup:
+    image: mongo:7.0
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - app-network
+    command: >
+      mongosh --host mongodb:27017 --eval "
+        try {
+          rs.status();
+          print('Replica set already initialized');
+        } catch(e) {
+          print('Initializing replica set...');
+          rs.initiate({
+            _id: 'rs0',
+            members: [
+              { _id: 0, host: 'mongodb:27017' }
+            ]
+          });
+          print('Replica set initialized');
+        }
+      "
+    restart: "no"
+
   server:
     build:
       context: ./server
@@ -6,13 +48,13 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - NODE_ENV={process.env.NODE_ENV}
-      - PORT={process.env.SERVER_PORT}
-      - CLIENT_URL={process.env.CLIENT_URL}
-      - DATABASE_URL=${DATABASE_URL}
-      - SESSION_SECRET=${SESSION_SECRET}
+      - NODE_ENV=development
+      - PORT=3001
+      - CLIENT_URL=http://localhost:3000
+      - DATABASE_URL=mongodb://mongodb:27017/app-database?replicaSet=rs0
+      - SESSION_SECRET=secret
     depends_on:
-      - client
+      - mongodb-setup
     networks:
       - app-network
     restart: unless-stopped
@@ -24,9 +66,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV={process.env.NODE_ENV}
-      - PORT={process.env.CLIENT_PORT}
-      - NEXT_PUBLIC_SERVER_URL={process.env.NEXT_PUBLIC_SERVER_URL}
+      - NODE_ENV=development
+      - PORT=3000
+      - NEXT_PUBLIC_SERVER_URL=http://localhost:3001
+    depends_on:
+      - server
     networks:
       - app-network
     restart: unless-stopped
@@ -34,6 +78,3 @@ services:
 networks:
   app-network:
     driver: bridge
-
-volumes:
-  app-data:
