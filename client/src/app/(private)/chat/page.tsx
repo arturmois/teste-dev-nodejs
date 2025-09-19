@@ -19,6 +19,7 @@ import { ChatHeader } from "./_components/chat-header";
 import { UserSidebar } from "./_components/user-sidebar";
 
 export default function ChatPage() {
+  console.log("ChatPage");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { unreadMessages, setUnreadMessages, selectedUserId } = useSocket();
   const { usersOnline } = useOnlineUsers();

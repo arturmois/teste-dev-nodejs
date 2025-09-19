@@ -1,7 +1,6 @@
 "use client";
 
-import { Paperclip, Send, Smile } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { Send } from "lucide-react";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -9,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/contexts/auth-context";
 import { useChatMessages } from "@/hooks/use-chat-messages";
 import type { MessageData, SocketUserData } from "@/types/socketTypes";
 
@@ -17,7 +17,7 @@ interface ChatAreaProps {
 }
 
 export function ChatArea({ selectedUser }: ChatAreaProps) {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const [newMessage, setNewMessage] = useState("");
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -33,12 +33,10 @@ export function ChatArea({ selectedUser }: ChatAreaProps) {
     if (!selectedUser?.id) return [];
     return socketMessages.filter(
       (msg: MessageData) =>
-        (msg.senderId === selectedUser.id &&
-          msg.receiverId === session?.user.id) ||
-        (msg.senderId === session?.user.id &&
-          msg.receiverId === selectedUser.id),
+        (msg.senderId === selectedUser.id && msg.receiverId === user?.id) ||
+        (msg.senderId === user?.id && msg.receiverId === selectedUser.id),
     );
-  }, [socketMessages, selectedUser?.id, session?.user.id]);
+  }, [socketMessages, selectedUser?.id, user?.id]);
 
   useEffect(() => {
     scrollToBottom();
@@ -104,8 +102,8 @@ export function ChatArea({ selectedUser }: ChatAreaProps) {
         <ScrollArea className="h-full p-2" ref={scrollAreaRef}>
           <div className="space-y-4">
             {filteredMessages.map((message) => {
-              const isCurrentUser = message.senderId === session?.user.id;
-              const sender = isCurrentUser ? session?.user : selectedUser;
+              const isCurrentUser = message.senderId === user?.id;
+              const sender = isCurrentUser ? user : selectedUser;
               return (
                 <div
                   key={message.id}

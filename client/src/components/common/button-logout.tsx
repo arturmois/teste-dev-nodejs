@@ -1,18 +1,14 @@
 "use client";
 
 import { LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/auth-context";
 
 const ButtonLogout = () => {
-  const router = useRouter();
+  const { logout } = useAuth();
   const handleLogout = async () => {
-    await signOut({
-      redirect: false,
-    });
-    router.push("/auth/signin");
+    await logout();
   };
   return (
     <Button onClick={handleLogout}>

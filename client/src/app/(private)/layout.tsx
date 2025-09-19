@@ -1,18 +1,42 @@
-import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
+"use client";
 
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+import { useAuth } from "@/contexts/auth-context";
 import { SocketProvider } from "@/contexts/socket-context";
 
 interface PrivateLayoutProps {
   children: React.ReactNode;
 }
 
-const PrivateLayout = async ({ children }: PrivateLayoutProps) => {
-  const session = await getServerSession();
-  if (!session) {
-    redirect("/auth/signin");
+const PrivateLayout = ({ children }: PrivateLayoutProps) => {
+  const { isAuthenticated, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push("/auth/signin");
+    }
+  }, [isAuthenticated, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Carregando...
+      </div>
+    );
   }
-  return <SocketProvider>{children}</SocketProvider>;
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return (
+    <>
+      <SocketProvider>{children}</SocketProvider>
+    </>
+  );
 };
 
 export default PrivateLayout;

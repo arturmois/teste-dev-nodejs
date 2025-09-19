@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -25,6 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/auth-context";
 
 const formSchema = z.object({
   username: z
@@ -43,6 +43,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function SigninPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -53,17 +54,12 @@ export default function SigninPage() {
 
   async function onSubmit(values: FormValues) {
     try {
-      const result = await signIn("credentials", {
-        username: values.username,
-        password: values.password,
-        redirect: false,
-      });
-      if (result?.ok) {
+      const result = await login(values.username, values.password);
+      if (result.success) {
         toast.success("Login realizado com sucesso");
         return router.push("/chat");
       }
-      toast.error("Erro ao fazer login");
-      console.error("signin error:", result?.error);
+      toast.error(result.error || "Erro ao fazer login");
     } catch (error) {
       toast.error("Erro inesperado");
       console.error("signin error:", error);

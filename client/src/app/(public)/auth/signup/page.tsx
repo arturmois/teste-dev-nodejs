@@ -5,9 +5,25 @@ import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import * as z from "zod";
 
-import signup from "@/actions/signup";
-import { type SignupSchema, signupSchema } from "@/actions/signup/schema";
+import { useAuth } from "@/contexts/auth-context";
+
+const signupSchema = z
+  .object({
+    name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+    username: z
+      .string()
+      .min(3, "Nome de usuário deve ter pelo menos 3 caracteres"),
+    password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    confirmPassword: z.string().min(6, "Confirmação de senha é obrigatória"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Senhas não coincidem",
+    path: ["confirmPassword"],
+  });
+
+type SignupSchema = z.infer<typeof signupSchema>;
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,6 +44,7 @@ import { Input } from "@/components/ui/input";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { signup } = useAuth();
   const form = useForm<SignupSchema>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -40,13 +57,16 @@ export default function SignupPage() {
 
   async function onSubmit(values: SignupSchema) {
     try {
-      const result = await signup(values);
+      const result = await signup(
+        values.name,
+        values.username,
+        values.password,
+      );
       if (result.success) {
         toast.success("Conta criada com sucesso");
         return router.push("/auth/signin");
       }
-      toast.error("Erro ao criar conta");
-      console.error("signup error:", result.error);
+      toast.error(result.error || "Erro ao criar conta");
     } catch (error) {
       toast.error("Erro inesperado");
       console.error("signup error:", error);

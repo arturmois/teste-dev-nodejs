@@ -1,6 +1,5 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import {
   createContext,
   ReactNode,
@@ -15,6 +14,8 @@ import { io, Socket } from "socket.io-client";
 import { toast } from "sonner";
 
 import { type MessageData, SocketUserData } from "@/types/socketTypes";
+
+import { useAuth } from "./auth-context";
 
 interface SocketContextType {
   socket: Socket | null;
@@ -34,9 +35,10 @@ interface SocketProviderProps {
 }
 
 export function SocketProvider({ children }: SocketProviderProps) {
-  const { data: session } = useSession();
+  const { user, isAuthenticated } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const socketRef = useRef<Socket | null>(null);
   const [usersOnline, setUsersOnline] = useState<SocketUserData[]>([]);
   const [messages, setMessages] = useState<MessageData[]>([]);
   const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>(
@@ -56,12 +58,8 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const showNotification = useCallback(
     (senderId: string) => {
       if (unreadMessages[senderId] > 0) return;
-      toast("Notificação de mensagem recebida", {
+      toast("Nova mensagem recebida", {
         description: "Você tem uma nova mensagem",
-        action: {
-          label: "Ver",
-          onClick: () => console.log("Ver"),
-        },
         style: {
           backgroundColor: "var(--primary)",
           color: "var(--primary-foreground)",
@@ -76,87 +74,112 @@ export function SocketProvider({ children }: SocketProviderProps) {
   showNotificationRef.current = showNotification;
 
   useEffect(() => {
-    if (!session?.user) return;
-
-    const newSocket = io(process.env.NEXT_PUBLIC_SERVER_URL!, {
-      withCredentials: true,
-      auth: {
-        token: session.token,
-      },
-    });
-
-    newSocket.on("connect", () => {
-      console.log("connected to server");
-      setIsConnected(true);
-
-      newSocket.emit("userOnline", {
-        id: session.user.id,
-        name: session.user.name || "Usuário",
-        username: session.user.username || session.user.name || "Usuário",
-        avatar: session.user.avatar || "",
-      });
-    });
-
-    newSocket.on("disconnect", () => {
-      console.log("disconnected from server");
-      setIsConnected(false);
-    });
-
-    newSocket.on("newMessage", (message: MessageData) => {
-      setMessages((prev) => [...prev, message]);
-      if (
-        message.senderId !== selectedUserId.current &&
-        message.receiverId === session?.user.id
-      ) {
-        showNotificationRef.current(message.senderId);
-        setUnreadMessages((prev) => ({
-          ...prev,
-          [message.senderId]: (prev[message.senderId] || 0) + 1,
-        }));
+    if (!isAuthenticated || !user) {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+        setSocket(null);
+        setIsConnected(false);
       }
-    });
+      return;
+    }
 
-    newSocket.on("messageSent", (message: MessageData) => {
-      setMessages((prev) => [...prev, message]);
-    });
-
-    newSocket.on("messagesHistory", (recentMessages: MessageData[]) => {
-      setMessages(recentMessages);
-    });
-
-    newSocket.on("onlineUsers", (users: SocketUserData[]) => {
-      setUsersOnline(users);
-    });
-
-    newSocket.on("onlineUser", (user: SocketUserData) => {
-      setUsersOnline((prev) => {
-        const exists = prev.some((u) => u.id === user.id);
-        if (exists)
-          return prev.map((u) =>
-            u.id === user.id ? { ...user, isOnline: true } : u,
-          );
-        return [user, ...prev];
+    const connectSocket = () => {
+      const newSocket = io(process.env.NEXT_PUBLIC_SERVER_URL!, {
+        withCredentials: true,
+        transports: ["websocket", "polling"],
+        timeout: 20000,
       });
-    });
 
-    newSocket.on("offlineUser", (userId: string) => {
-      setUsersOnline((prev) =>
-        prev.map((user) =>
-          user.id !== userId ? user : { ...user, isOnline: false },
-        ),
-      );
-    });
+      newSocket.on("connect", () => {
+        setIsConnected(true);
 
-    newSocket.on("error", (error: string) => {
-      console.error("server error:", error);
-    });
+        newSocket.emit("userOnline", {
+          id: user.id,
+          name: user.name || "Usuário",
+          username: user.username,
+          avatar: user.avatar || "",
+        });
+      });
 
-    setSocket(newSocket);
+      newSocket.on("connect_error", (error) => {
+        console.error("Erro na conexão WebSocket:", error);
+        setIsConnected(false);
+      });
+
+      newSocket.on("disconnect", (reason) => {
+        console.log("WebSocket desconectado:", reason);
+        setIsConnected(false);
+      });
+
+      newSocket.on("newMessage", (message: MessageData) => {
+        setMessages((prev) => [...prev, message]);
+        if (
+          message.senderId !== selectedUserId.current &&
+          message.receiverId === user.id
+        ) {
+          showNotificationRef.current(message.senderId);
+          setUnreadMessages((prev) => ({
+            ...prev,
+            [message.senderId]: (prev[message.senderId] || 0) + 1,
+          }));
+        }
+      });
+
+      newSocket.on("messageSent", (message: MessageData) => {
+        setMessages((prev) => [...prev, message]);
+      });
+
+      newSocket.on("messagesHistory", (recentMessages: MessageData[]) => {
+        setMessages(recentMessages);
+      });
+
+      newSocket.on("onlineUsers", (users: SocketUserData[]) => {
+        setUsersOnline(users);
+      });
+
+      newSocket.on("onlineUser", (user: SocketUserData) => {
+        setUsersOnline((prev) => {
+          const exists = prev.some((u) => u.id === user.id);
+          if (exists)
+            return prev.map((u) =>
+              u.id === user.id ? { ...user, isOnline: true } : u,
+            );
+          return [user, ...prev];
+        });
+      });
+
+      newSocket.on("offlineUser", (userId: string) => {
+        setUsersOnline((prev) =>
+          prev.map((user) =>
+            user.id !== userId ? user : { ...user, isOnline: false },
+          ),
+        );
+      });
+
+      newSocket.on("error", (error: string) => {
+        console.error("server error:", error);
+      });
+
+      socketRef.current = newSocket;
+      setSocket(newSocket);
+
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+          socketRef.current = null;
+          setSocket(null);
+          setIsConnected(false);
+        }
+      };
+    };
+
+    const timeoutId = setTimeout(connectSocket, 100);
 
     return () => {
-      newSocket.disconnect();
+      clearTimeout(timeoutId);
     };
-  }, [session]);
+  }, [isAuthenticated, user]);
 
   const contextValue: SocketContextType = {
     socket,

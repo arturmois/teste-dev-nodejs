@@ -1,19 +1,20 @@
-import { useSession } from "next-auth/react";
 import { useCallback } from "react";
+
+import { useAuth } from "@/contexts/auth-context";
 
 import { useSocket } from "./use-socket";
 
 export function useChatMessages() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const { messages, sendMessage } = useSocket();
 
   const sendChatMessage = useCallback(
     (content: string, receiverId: string) => {
-      if (session?.user?.id && receiverId) {
+      if (user?.id && receiverId) {
         sendMessage(content, receiverId);
       }
     },
-    [sendMessage, session?.user?.id],
+    [sendMessage, user?.id],
   );
 
   return {
