@@ -2,6 +2,10 @@
 
 Esta aplicação é um sistema de chat em tempo real construído com Node.js, Socket.IO, Next.js e MongoDB. Utiliza autenticação com Passport.js e suporte a clustering para alta performance.
 
+## 🎥 Demonstração
+
+Vídeo demonstrativo da aplicação: https://youtu.be/UalP6N4FMcs
+
 ## 🚀 Tecnologias Utilizadas
 
 - **Backend**: Node.js, Express, Socket.IO, Prisma ORM
@@ -230,6 +234,49 @@ Durante o desenvolvimento desta aplicação, foram consultados os seguintes recu
    - Configuração da estratégia de autenticação local
    - Serialização e deserialização de usuários
    - Integração com Express sessions
+
+## 🔗 Links de Inspiração
+
+Recursos adicionais que podem ser úteis para expandir e melhorar esta aplicação:
+
+### Documentação Socket.IO
+
+- **Socket.IO Server API**: https://socket.io/docs/v4/server-api/
+
+  - Documentação completa da API do servidor
+  - Métodos e eventos disponíveis
+  - Configurações avançadas
+
+- **Socket.IO Client API**: https://socket.io/docs/v4/client-api/
+  - Documentação da API do cliente
+  - Configuração de conexões
+  - Gerenciamento de eventos
+
+### Autenticação e Segurança
+
+- **Socket.IO com Passport**: https://socket.io/how-to/use-with-passport
+
+  - Guia detalhado de integração
+  - Melhores práticas de segurança
+  - Exemplos práticos
+
+- **Passport Local Strategy**: https://www.passportjs.org/packages/passport-local/
+  - Estratégia de autenticação local
+  - Configuração e customização
+  - Validação de credenciais
+
+### Deploy e Containerização
+
+- **Next.js com Docker**: https://github.com/vercel/next.js/tree/canary/examples/with-docker
+
+  - Exemplo oficial de containerização
+  - Configurações de produção
+  - Otimizações de performance
+
+- **Deploy VPS Dockerfile**: https://github.com/arturmois/deploy-vps/blob/main/Dockerfile
+  - Configuração para deploy em VPS
+  - Exemplo prático de produção
+  - Scripts de automação
 
 ## 🤝 Contribuindo
 
