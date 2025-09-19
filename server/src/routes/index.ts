@@ -1,12 +1,12 @@
 import { Router } from "express";
 import authRoutes from "./authRoutes";
-import { authenticateJWT } from "../middlewares/auth";
+import { isAuthenticated } from "../middlewares/auth";
 
 const router = Router();
 
 router.use("/auth", authRoutes);
 
-router.get("/profile", authenticateJWT, (req, res) => {
+router.get("/profile", isAuthenticated, (req, res) => {
   res.json({ user: req.user });
 });
 

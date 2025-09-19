@@ -1,10 +1,10 @@
 import "dotenv/config";
-import app from "./app";
+import app, { sessionMiddleware } from "./app";
 import envs from "./config/envs";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
+import passport from "./config/passport";
 import prisma from "./db/prisma";
-import jwt from "jsonwebtoken";
 import { MessageData, Message, SocketUserData } from "./types/socketTypes";
 import { socketEvents } from "./types/socketEvents";
 
@@ -17,29 +17,52 @@ const io = new Server(server, {
   transports: ["websocket", "polling"],
 });
 
-io.use(async (socket, next) => {
-  try {
-    const token = socket.handshake.auth.token;
-    if (!token) {
-      return next(new Error("No token provided"));
+function onlyForHandshake(middleware: any) {
+  return (req: any, res: any, next: any) => {
+    const isHandshake = req._query.sid === undefined;
+    if (isHandshake) {
+      middleware(req, res, next);
+    } else {
+      next();
     }
-    const decoded = jwt.verify(token, envs.JWT_SECRET) as { userId: string };
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-    });
-    if (!user) {
-      return next(new Error("User not found"));
+  };
+}
+
+io.engine.use(onlyForHandshake(sessionMiddleware));
+io.engine.use(onlyForHandshake(passport.initialize()));
+io.engine.use(onlyForHandshake(passport.session()));
+
+io.engine.use(
+  onlyForHandshake((req: any, res: any, next: any) => {
+    if (req.user) {
+      next();
+    } else {
+      res.writeHead(401);
+      res.end();
     }
-    socket.data.user = user;
-    next();
-  } catch (error) {
-    next(new Error("Authentication failed"));
-  }
-});
+  })
+);
 
 io.on(socketEvents.CONNECT, async (socket) => {
-  const currentUser = socket.data.user;
-  console.log(`user connected: ${currentUser.name} (${currentUser.id})`);
+  const authenticatedUser = (socket.request as any).user;
+
+  if (!authenticatedUser) {
+    socket.disconnect();
+    return;
+  }
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: authenticatedUser.id },
+  });
+
+  if (!currentUser) {
+    socket.disconnect();
+    return;
+  }
+
+  console.log(`User connected: ${currentUser.name} (${currentUser.id})`);
+
+  socket.join(`user:${currentUser.id}`);
 
   await prisma.user.update({
     where: { id: currentUser.id },

@@ -4,14 +4,14 @@ const envSchema = z.object({
   PORT: z.string().transform((port) => parseInt(port, 10)),
   CLIENT_URL: z.string(),
   DATABASE_URL: z.string(),
-  JWT_SECRET: z.string(),
+  SESSION_SECRET: z.string().optional(),
 });
 
 const envServer = envSchema.safeParse({
   PORT: process.env.PORT,
   CLIENT_URL: process.env.CLIENT_URL,
   DATABASE_URL: process.env.DATABASE_URL,
-  JWT_SECRET: process.env.JWT_SECRET,
+  SESSION_SECRET: process.env.SESSION_SECRET,
 });
 
 if (!envServer.success) {
