@@ -30,13 +30,7 @@ const formSchema = z.object({
   username: z
     .string()
     .min(3, "Nome de usuário deve ter pelo menos 3 caracteres"),
-  password: z
-    .string()
-    .min(6, "Senha deve ter pelo menos 6 caracteres")
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Senha deve conter pelo menos uma letra maiúscula, uma letra minúscula e um número",
-    ),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
 });
 
 type FormValues = z.infer<typeof formSchema>;

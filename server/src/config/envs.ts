@@ -4,7 +4,7 @@ const envSchema = z.object({
   PORT: z.string().transform((port) => parseInt(port, 10)),
   CLIENT_URL: z.string(),
   DATABASE_URL: z.string(),
-  SESSION_SECRET: z.string().optional(),
+  SESSION_SECRET: z.string(),
 });
 
 const envServer = envSchema.safeParse({
