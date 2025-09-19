@@ -2,11 +2,11 @@
 
 Esta aplicação é um sistema de chat em tempo real construído com Node.js, Socket.IO, Next.js e MongoDB. Utiliza autenticação com Passport.js e suporte a clustering para alta performance.
 
-## 🎥 Demonstração
+## Demonstração
 
 Vídeo demonstrativo da aplicação: https://youtu.be/UalP6N4FMcs
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 - **Backend**: Node.js, Express, Socket.IO, Prisma ORM
 - **Frontend**: Next.js, React, TypeScript, Tailwind CSS
@@ -15,13 +15,13 @@ Vídeo demonstrativo da aplicação: https://youtu.be/UalP6N4FMcs
 - **Clustering**: Socket.IO Cluster Adapter para escalabilidade
 - **Containerização**: Docker e Docker Compose
 
-## 📋 Pré-requisitos
+## Pré-requisitos
 
 - Node.js (versão 18 ou superior)
 - Docker e Docker Compose
 - Git
 
-## 🐳 Instalação e Execução com Docker Compose (Recomendado)
+## Instalação e Execução com Docker Compose (Recomendado)
 
 ### 1. Clone o repositório
 
@@ -55,7 +55,7 @@ Este comando irá:
 docker-compose down
 ```
 
-## 🔧 Configuração do Banco de Dados (Apenas para Instalação Manual)
+## Configuração do Banco de Dados (Apenas para Instalação Manual)
 
 **Nota**: Esta seção é apenas necessária se você **NÃO** estiver usando Docker. O Docker Compose já configura automaticamente o MongoDB com Replica Set.
 
@@ -71,7 +71,7 @@ Para ambiente de desenvolvimento local (sem Docker), você precisará de uma URL
 DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/app-database?retryWrites=true&w=majority
 ```
 
-## 🛠️ Instalação Manual
+## Instalação Manual
 
 ### 1. Clone o repositório
 
@@ -118,6 +118,9 @@ cd client
 # Instale as dependências
 npm install
 
+# Configure as variáveis de ambiente
+cp .env.example .env
+
 # Execute em modo desenvolvimento
 npm run dev
 ```
@@ -128,6 +131,7 @@ npm run dev
 
 ```env
 PORT=3001
+NODE_ENV=development
 CLIENT_URL=http://localhost:3000
 DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/app-database?retryWrites=true&w=majority
 SESSION_SECRET=seu_secret_muito_seguro_aqui
@@ -139,7 +143,7 @@ SESSION_SECRET=seu_secret_muito_seguro_aqui
 NEXT_PUBLIC_SERVER_URL=http://localhost:3001
 ```
 
-## 🏗️ Scripts Disponíveis
+## Scripts Disponíveis
 
 ### Servidor:
 
@@ -159,7 +163,7 @@ NEXT_PUBLIC_SERVER_URL=http://localhost:3001
 - `npm run start` - Executa o cliente em produção
 - `npm run lint` - Executa o linter
 
-## 📚 Arquitetura da Aplicação
+## Arquitetura da Aplicação
 
 ### Backend
 
@@ -184,7 +188,7 @@ NEXT_PUBLIC_SERVER_URL=http://localhost:3001
   - `User`: Usuários do sistema
   - `Message`: Mensagens do chat
 
-## 🔐 Sistema de Autenticação
+## Sistema de Autenticação
 
 A aplicação utiliza Passport.js com estratégia local para autenticação:
 
@@ -193,7 +197,7 @@ A aplicação utiliza Passport.js com estratégia local para autenticação:
 - Sessões gerenciadas pelo Express
 - Middleware de autenticação para rotas protegidas
 
-## ⚡ Clustering e Escalabilidade
+## Clustering e Escalabilidade
 
 O sistema suporta clustering para melhor performance:
 
@@ -202,19 +206,7 @@ O sistema suporta clustering para melhor performance:
 - Sincronização de estado entre instâncias
 - Balanceamento automático de conexões
 
-## 🧪 Testes
-
-```bash
-# Executar testes no servidor
-cd server
-npm test
-
-# Executar testes no cliente
-cd client
-npm test
-```
-
-## 📖 Referências e Artigos Utilizados
+## Referências e Artigos Utilizados
 
 Durante o desenvolvimento desta aplicação, foram consultados os seguintes recursos:
 
@@ -235,7 +227,7 @@ Durante o desenvolvimento desta aplicação, foram consultados os seguintes recu
    - Serialização e deserialização de usuários
    - Integração com Express sessions
 
-## 🔗 Links de Inspiração
+## Links de Inspiração
 
 Recursos adicionais que podem ser úteis para expandir e melhorar esta aplicação:
 
@@ -278,7 +270,7 @@ Recursos adicionais que podem ser úteis para expandir e melhorar esta aplicaç�
   - Exemplo prático de produção
   - Scripts de automação
 
-## 🤝 Contribuindo
+## Contribuindo
 
 1. Fork o projeto
 2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
@@ -286,17 +278,6 @@ Recursos adicionais que podem ser úteis para expandir e melhorar esta aplicaç�
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
-## 📝 Licença
+## Licença
 
 Este projeto está sob a licença ISC. Veja o arquivo `LICENSE` para mais detalhes.
-
-## 🆘 Suporte
-
-Se você encontrar algum problema ou tiver dúvidas:
-
-1. Verifique se todas as dependências estão instaladas
-2. Certifique-se de que o MongoDB está rodando com Replica Set
-3. Verifique as variáveis de ambiente
-4. Consulte os logs dos containers: `docker-compose logs`
-
-Para mais ajuda, abra uma issue no repositório do projeto.
