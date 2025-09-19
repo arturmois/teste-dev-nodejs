@@ -8,23 +8,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 
-import { useAuth } from "@/contexts/auth-context";
-
-const signupSchema = z
-  .object({
-    name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-    username: z
-      .string()
-      .min(3, "Nome de usuário deve ter pelo menos 3 caracteres"),
-    password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
-    confirmPassword: z.string().min(6, "Confirmação de senha é obrigatória"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Senhas não coincidem",
-    path: ["confirmPassword"],
-  });
-
-type SignupSchema = z.infer<typeof signupSchema>;
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -42,6 +25,23 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/auth-context";
+
+const signupSchema = z
+  .object({
+    name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+    username: z
+      .string()
+      .min(3, "Nome de usuário deve ter pelo menos 3 caracteres"),
+    password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    confirmPassword: z.string().min(6, "Confirmação de senha é obrigatória"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Senhas não coincidem",
+    path: ["confirmPassword"],
+  });
+
+type SignupSchema = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const router = useRouter();
@@ -56,23 +56,26 @@ export default function SignupPage() {
     },
   });
 
-  async function onSubmit(values: SignupSchema) {
+  const handleSubmit = async (values: SignupSchema) => {
     try {
       const result = await signup(
         values.name,
         values.username,
         values.password,
       );
-      if (result.success) {
-        toast.success("Conta criada com sucesso");
-        return router.push("/auth/signin");
+
+      if (!result.success) {
+        toast.error(result.error || "Falha ao criar conta");
+        return;
       }
-      toast.error(result.error || "Erro ao criar conta");
+
+      toast.success("Conta criada com sucesso!");
+      router.push("/auth/signin");
     } catch (error) {
-      toast.error("Erro inesperado");
-      console.error("signup error:", error);
+      console.error("Erro no cadastro:", error);
+      toast.error("Erro inesperado. Tente novamente.");
     }
-  }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -87,7 +90,10 @@ export default function SignupPage() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-6"
+            >
               <FormField
                 control={form.control}
                 name="name"
@@ -151,7 +157,14 @@ export default function SignupPage() {
                   className="w-full cursor-pointer"
                   disabled={form.formState.isSubmitting}
                 >
-                  Criar conta
+                  {form.formState.isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Criando conta...
+                    </>
+                  ) : (
+                    "Criar conta"
+                  )}
                 </Button>
                 <span className="text-muted-foreground mt-2 text-center text-sm">
                   Já tem uma conta?{" "}

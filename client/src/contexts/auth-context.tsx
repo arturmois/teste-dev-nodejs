@@ -30,7 +30,7 @@ interface AuthContextType {
     username: string,
     password: string,
   ) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void>;
+  logout: (onDisconnectSocket?: () => void) => Promise<void>;
   checkAuth: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -83,19 +83,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ username, password }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.user) {
-          setUser(data.user);
-          return { success: true };
-        }
+      if (response.status === 401) {
+        return { success: false, error: "Usuario ou senha inválidos" };
       }
 
-      const error = await response.json();
-      return { success: false, error: error.message || "Login failed" };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return {
+          success: false,
+          error: errorData.message || "Usuario ou senha inválidos",
+        };
+      }
+
+      const data = await response.json();
+      if (data.user) {
+        setUser(data.user);
+        return { success: true };
+      }
+
+      return { success: false, error: "Dados de resposta inválidos" };
     } catch (error) {
-      console.error("Erro na requisição de login:", error);
-      return { success: false, error: "Network error" };
+      console.error("Erro no login:", error);
+      return {
+        success: false,
+        error: "Erro de conexão. Verifique sua internet.",
+      };
     }
   };
 
@@ -114,22 +126,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: true };
       }
 
-      const error = await response.json();
-      return { success: false, error: error.message || "Signup failed" };
+      const errorData = await response.json().catch(() => ({}));
+      return {
+        success: false,
+        error: errorData.message || "Falha ao criar conta",
+      };
     } catch (error) {
-      console.error("Erro na requisição de registro:", error);
-      return { success: false, error: "Network error" };
+      console.error("Erro no cadastro:", error);
+      return {
+        success: false,
+        error: "Erro de conexão. Verifique sua internet.",
+      };
     }
   };
 
-  const logout = async () => {
+  const logout = async (onDisconnectSocket?: () => void) => {
     try {
+      if (onDisconnectSocket) {
+        onDisconnectSocket();
+      }
+
       await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("Erro no logout:", error);
     } finally {
       setUser(null);
     }
@@ -137,11 +159,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isPublicRoute) {
-      // Para rotas públicas, apenas define loading como false sem fazer verificação
       setLoading(false);
       setUser(null);
     } else {
-      // Para rotas privadas, verifica a autenticação
       checkAuth();
     }
   }, [pathname, isPublicRoute]);

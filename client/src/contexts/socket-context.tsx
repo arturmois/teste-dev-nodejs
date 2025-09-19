@@ -26,6 +26,7 @@ interface SocketContextType {
   unreadMessages: Record<string, number>;
   setUnreadMessages: (unreadMessages: Record<string, number>) => void;
   selectedUserId: RefObject<string | null>;
+  disconnectSocket: () => void;
 }
 
 export const SocketContext = createContext<SocketContextType | null>(null);
@@ -55,6 +56,18 @@ export function SocketProvider({ children }: SocketProviderProps) {
     }
   };
 
+  const disconnectSocket = useCallback(() => {
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
+      setSocket(null);
+      setIsConnected(false);
+      setUsersOnline([]);
+      setMessages([]);
+      setUnreadMessages({});
+    }
+  }, []);
+
   const showNotification = useCallback(
     (senderId: string) => {
       if (unreadMessages[senderId] > 0) return;
@@ -65,6 +78,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
           color: "var(--primary-foreground)",
           opacity: 0.85,
         },
+        position: "top-center",
       });
     },
     [unreadMessages],
@@ -190,6 +204,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
     unreadMessages,
     setUnreadMessages,
     selectedUserId,
+    disconnectSocket,
   };
 
   return (

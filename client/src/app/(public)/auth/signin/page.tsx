@@ -47,19 +47,22 @@ export default function SigninPage() {
     },
   });
 
-  async function onSubmit(values: FormValues) {
+  const handleSubmit = async (values: FormValues) => {
     try {
       const result = await login(values.username, values.password);
-      if (result.success) {
-        toast.success("Login realizado com sucesso");
-        return router.push("/chat");
+
+      if (!result.success) {
+        toast.error(result.error || "Falha no login");
+        return;
       }
-      toast.error(result.error || "Erro ao fazer login");
+
+      toast.success("Login realizado com sucesso!");
+      router.push("/chat");
     } catch (error) {
-      toast.error("Erro inesperado");
-      console.error("signin error:", error);
+      console.error("Erro no login:", error);
+      toast.error("Erro inesperado. Tente novamente.");
     }
-  }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -74,7 +77,10 @@ export default function SigninPage() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-6"
+            >
               <FormField
                 control={form.control}
                 name="username"
