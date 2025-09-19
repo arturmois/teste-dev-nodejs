@@ -99,10 +99,17 @@ export function SocketProvider({ children }: SocketProviderProps) {
     }
 
     const connectSocket = () => {
-      const newSocket = io(process.env.NEXT_PUBLIC_SERVER_URL!, {
+      const serverUrl =
+        process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3001";
+      const newSocket = io(serverUrl, {
         withCredentials: true,
         transports: ["websocket", "polling"],
         timeout: 20000,
+        forceNew: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
       });
 
       newSocket.on("connect", () => {
@@ -118,11 +125,26 @@ export function SocketProvider({ children }: SocketProviderProps) {
 
       newSocket.on("connect_error", (error) => {
         console.error("Erro na conexão WebSocket:", error);
+        console.error("Tentando conectar em:", serverUrl);
         setIsConnected(false);
       });
 
       newSocket.on("disconnect", (reason) => {
         console.log("WebSocket desconectado:", reason);
+        setIsConnected(false);
+      });
+
+      newSocket.on("reconnect", (attemptNumber) => {
+        console.log("WebSocket reconectado após", attemptNumber, "tentativas");
+        setIsConnected(true);
+      });
+
+      newSocket.on("reconnect_error", (error) => {
+        console.error("Erro na reconexão WebSocket:", error);
+      });
+
+      newSocket.on("reconnect_failed", () => {
+        console.error("Falha na reconexão WebSocket após todas as tentativas");
         setIsConnected(false);
       });
 

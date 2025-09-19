@@ -11,10 +11,12 @@ import { socketEvents } from "./types/socketEvents";
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: [envs.CLIENT_URL, "http://localhost:3000"],
+    origin: [envs.CLIENT_URL, "http://localhost:3000", "http://localhost:3002"],
     credentials: true,
   },
   transports: ["websocket", "polling"],
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
 
 function onlyForHandshake(middleware: any) {
@@ -37,6 +39,7 @@ io.engine.use(
     if (req.user) {
       next();
     } else {
+      console.log("Socket handshake failed: No authenticated user");
       res.writeHead(401);
       res.end();
     }
@@ -44,9 +47,11 @@ io.engine.use(
 );
 
 io.on(socketEvents.CONNECT, async (socket) => {
+  console.log("New socket connection attempt from:", socket.handshake.address);
   const authenticatedUser = (socket.request as any).user;
 
   if (!authenticatedUser) {
+    console.log("Socket disconnected: No authenticated user");
     socket.disconnect();
     return;
   }
