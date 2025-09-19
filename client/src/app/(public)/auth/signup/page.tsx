@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -144,20 +145,21 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
-              <Button
-                type="submit"
-                className="w-full cursor-pointer"
-                disabled={form.formState.isSubmitting}
-              >
-                {form.formState.isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Criando conta...
-                  </>
-                ) : (
-                  "Criar conta"
-                )}
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="submit"
+                  className="w-full cursor-pointer"
+                  disabled={form.formState.isSubmitting}
+                >
+                  Criar conta
+                </Button>
+                <span className="text-muted-foreground mt-2 text-center text-sm">
+                  Já tem uma conta?{" "}
+                  <Link href="/auth/signin" className="text-primary">
+                    Entrar
+                  </Link>
+                </span>
+              </div>
             </form>
           </Form>
         </CardContent>
