@@ -1,338 +1,255 @@
-# Chat em Tempo Real - Teste Dev Node.js
+# Aplicação Node.js com Socket.IO e Autenticação
 
-Aplicação de chat em tempo real desenvolvida com Next.js (frontend) e Node.js com Express (backend), utilizando Socket.IO para comunicação em tempo real e MongoDB com Prisma como ORM.
+Esta aplicação é um sistema de chat em tempo real construído com Node.js, Socket.IO, Next.js e MongoDB. Utiliza autenticação com Passport.js e suporte a clustering para alta performance.
 
-## 🏗️ Arquitetura
+## 🚀 Tecnologias Utilizadas
 
-- **Frontend**: Next.js 15 com React 19, TailwindCSS e shadcn/ui
-- **Backend**: Node.js com Express, Socket.IO, Passport.js para autenticação
-- **Banco de Dados**: MongoDB com Prisma ORM
-- **Autenticação**: Session-based com Passport.js
-- **Tempo Real**: Socket.IO para mensagens instantâneas
+- **Backend**: Node.js, Express, Socket.IO, Prisma ORM
+- **Frontend**: Next.js, React, TypeScript, Tailwind CSS
+- **Banco de Dados**: MongoDB com Replica Set
+- **Autenticação**: Passport.js com estratégia local
+- **Clustering**: Socket.IO Cluster Adapter para escalabilidade
+- **Containerização**: Docker e Docker Compose
 
 ## 📋 Pré-requisitos
 
 - Node.js (versão 18 ou superior)
-- MongoDB (local ou MongoDB Atlas)
-- npm ou yarn
+- Docker e Docker Compose
+- Git
 
-## 🚀 Setup Rápido
+## 🐳 Instalação e Execução com Docker Compose (Recomendado)
 
 ### 1. Clone o repositório
 
 ```bash
-git clone <url-do-repositorio>
+git clone <URL_DO_REPOSITORIO>
 cd teste-dev-nodejs
 ```
 
-### 2. Instale as dependências
+### 2. Execute com Docker Compose
 
 ```bash
-npm install
+docker-compose up -d
 ```
 
-### 3. Configure as variáveis de ambiente
+Este comando irá:
 
-Copie os arquivos de exemplo e configure suas variáveis:
+- Criar e configurar um container MongoDB com Replica Set
+- Construir e executar o servidor Node.js na porta 3001
+- Construir e executar o cliente Next.js na porta 3000
+- Configurar a rede interna para comunicação entre os serviços
 
-```bash
-# Verificar se os arquivos .env existem
-npm run check:env
-
-# Copiar arquivos de exemplo
-cp .env.example .env
-cp server/.env.example server/.env
-cp client/.env.example client/.env
-```
-
-#### Variáveis principais:
-
-**`.env` (raiz):**
-
-```env
-# Ambiente
-NODE_ENV=development
-
-# Portas
-CLIENT_PORT=3000
-SERVER_PORT=3001
-
-# URLs
-CLIENT_URL=http://localhost:3000
-NEXT_PUBLIC_SERVER_URL=http://localhost:3001
-
-# Banco de dados MongoDB
-DATABASE_URL="mongodb://localhost:27017/teste-dev-nodejs"
-
-# Sessão
-SESSION_SECRET=your-super-secret-session-key-here-change-in-production
-```
-
-**`server/.env`:**
-
-```env
-# Ambiente
-NODE_ENV=development
-PORT=3001
-
-# URLs
-CLIENT_URL=http://localhost:3000
-
-# Banco de dados MongoDB
-DATABASE_URL="mongodb://localhost:27017/teste-dev-nodejs"
-
-# Sessão
-SESSION_SECRET=your-super-secret-session-key-here-change-in-production
-```
-
-**`client/.env`:**
-
-```env
-# Ambiente
-NODE_ENV=development
-PORT=3000
-
-# URL do servidor
-NEXT_PUBLIC_SERVER_URL=http://localhost:3001
-```
-
-### 4. Setup do Prisma
-
-Execute o setup completo do Prisma:
-
-```bash
-# Gerar o cliente Prisma
-npm run prisma:generate
-
-# Sincronizar o schema com o banco
-npm run prisma:push
-
-# Popular o banco com dados iniciais (opcional)
-npm run prisma:seed
-```
-
-### 5. Executar a aplicação
-
-**Modo desenvolvimento (ambas as aplicações simultaneamente):**
-
-```bash
-npm run dev
-```
-
-**Executar aplicações separadamente:**
-
-```bash
-# Terminal 1 - Server
-npm run dev:server
-
-# Terminal 2 - Client
-npm run dev:client
-```
-
-### 6. Acessar a aplicação
+### 3. Acesse a aplicação
 
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:3001
+- **MongoDB**: localhost:27017
 
-## 📦 Scripts Disponíveis
-
-### Scripts da Raiz
-
-```bash
-npm run install:all     # Instala dependências de todas as aplicações
-npm run dev             # Executa client e server em modo desenvolvimento
-npm run dev:client      # Executa apenas o client
-npm run dev:server      # Executa apenas o server
-npm run build           # Build de produção de ambas aplicações
-npm run start           # Executa ambas aplicações em modo produção
-npm run setup           # Setup completo (install + prisma)
-npm run check:env       # Verifica se os arquivos .env existem
-```
-
-### Scripts do Prisma
+### 4. Para parar os serviços
 
 ```bash
-npm run prisma:generate # Gera o cliente Prisma
-npm run prisma:push     # Sincroniza schema com o banco
-npm run prisma:seed     # Popula o banco com dados iniciais
+docker-compose down
 ```
 
-## 🐳 Docker (Opcional)
+## 🔧 Configuração do Banco de Dados (Apenas para Instalação Manual)
 
-Para executar com Docker:
+**Nota**: Esta seção é apenas necessária se você **NÃO** estiver usando Docker. O Docker Compose já configura automaticamente o MongoDB com Replica Set.
+
+Para ambiente de desenvolvimento local (sem Docker), você precisará de uma URL do MongoDB Atlas:
+
+1. Acesse https://www.mongodb.com/atlas
+2. Crie uma conta gratuita
+3. Crie um cluster
+4. Obtenha a string de conexão
+5. Configure a variável de ambiente:
+
+```
+DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/app-database?retryWrites=true&w=majority
+```
+
+## 🛠️ Instalação Manual
+
+### 1. Clone o repositório
 
 ```bash
-docker-compose up --build
+git clone <URL_DO_REPOSITORIO>
+cd teste-dev-nodejs
 ```
 
-## 🗄️ Banco de Dados
+### 2. Configuração do Servidor (Backend)
 
-### MongoDB Local
+```bash
+# Navegue para a pasta do servidor
+cd server
 
-1. Instale o MongoDB Community Edition
-2. Inicie o serviço MongoDB
-3. Configure a `DATABASE_URL` para: `mongodb://localhost:27017/teste-dev-nodejs`
+# Instale as dependências
+npm install
 
-### MongoDB Atlas (Cloud)
+# Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o arquivo .env com suas configurações
 
-1. Crie uma conta no [MongoDB Atlas](https://www.mongodb.com/atlas)
-2. Crie um cluster
-3. Configure a `DATABASE_URL` com sua connection string
-4. Exemplo: `mongodb+srv://username:password@cluster.mongodb.net/teste-dev-nodejs`
+# Gere o cliente Prisma
+npm run prisma:generate
 
-### Schema do Banco
+# Execute as migrações do banco
+npm run prisma:push
 
-O projeto utiliza os seguintes modelos:
+# Popule o banco com dados iniciais (opcional)
+npm run prisma:seed
 
-- **User**: Usuários do sistema
+# Execute em modo desenvolvimento
+npm run dev
 
-  - id, name, username, password
-  - is_online, last_seen, avatar
-  - Relações com mensagens enviadas e recebidas
-
-- **Message**: Mensagens do chat
-  - id, content, read
-  - sender_id, receiver_id
-  - Timestamps de criação e atualização
-
-## 🔧 Desenvolvimento
-
-### Estrutura do Projeto
-
-```
-teste-dev-nodejs/
-├── client/                 # Frontend Next.js
-│   ├── src/
-│   │   ├── app/           # App Router
-│   │   ├── components/    # Componentes React
-│   │   └── lib/          # Utilitários
-│   └── package.json
-├── server/                # Backend Node.js
-│   ├── src/
-│   │   ├── controllers/  # Controladores
-│   │   ├── middlewares/  # Middlewares
-│   │   ├── routes/       # Rotas
-│   │   └── utils/        # Utilitários
-│   ├── prisma/           # Schema e seeds
-│   └── package.json
-├── docker-compose.yml     # Configuração Docker
-└── package.json          # Scripts da raiz
+# OU execute em modo cluster para alta performance
+npm run dev:cluster
 ```
 
-### Tecnologias Utilizadas
+### 3. Configuração do Cliente (Frontend)
 
-**Frontend:**
+```bash
+# Em um novo terminal, navegue para a pasta do cliente
+cd client
 
-- Next.js 15 com App Router
-- React 19
-- TailwindCSS 4
-- shadcn/ui components
-- Socket.IO Client
-- React Hook Form + Zod
+# Instale as dependências
+npm install
 
-**Backend:**
+# Execute em modo desenvolvimento
+npm run dev
+```
 
-- Express.js
-- Socket.IO
-- Prisma ORM
-- Passport.js
-- bcrypt
-- express-session
+### 4. Variáveis de Ambiente Necessárias
 
-## 🔐 Autenticação
+#### Servidor (`server/.env`):
 
-O sistema utiliza autenticação baseada em sessão com Passport.js:
+```env
+PORT=3001
+CLIENT_URL=http://localhost:3000
+DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/app-database?retryWrites=true&w=majority
+SESSION_SECRET=seu_secret_muito_seguro_aqui
+```
 
-1. Login com username/password
-2. Sessão armazenada no servidor
-3. Middleware de autenticação protege rotas
-4. Socket.IO integrado com sessões
+#### Cliente (`client/.env.local`):
 
-## 📝 API Endpoints
+```env
+NEXT_PUBLIC_SERVER_URL=http://localhost:3001
+```
 
-- `POST /api/auth/register` - Registrar usuário
-- `POST /api/auth/login` - Login
-- `POST /api/auth/logout` - Logout
-- `GET /api/auth/me` - Dados do usuário logado
-- `GET /api/users` - Listar usuários
-- `GET /api/messages/:userId` - Mensagens com usuário específico
-- `POST /api/messages` - Enviar mensagem
+## 🏗️ Scripts Disponíveis
 
-## 🔄 Socket.IO Events
+### Servidor:
 
-**Client → Server:**
+- `npm run dev` - Executa o servidor em modo desenvolvimento
+- `npm run dev:cluster` - Executa o servidor em modo cluster
+- `npm run build` - Constrói a aplicação para produção
+- `npm run start` - Executa a aplicação em produção
+- `npm run start:cluster` - Executa em produção com cluster
+- `npm run prisma:generate` - Gera o cliente Prisma
+- `npm run prisma:push` - Aplica mudanças no schema ao banco
+- `npm run prisma:seed` - Popula o banco com dados iniciais
 
-- `join_room` - Entrar em sala de chat
-- `send_message` - Enviar mensagem
-- `user_typing` - Usuário digitando
+### Cliente:
 
-**Server → Client:**
+- `npm run dev` - Executa o cliente em modo desenvolvimento
+- `npm run build` - Constrói o cliente para produção
+- `npm run start` - Executa o cliente em produção
+- `npm run lint` - Executa o linter
 
-- `new_message` - Nova mensagem recebida
-- `user_online` - Usuário ficou online
-- `user_offline` - Usuário ficou offline
-- `typing` - Alguém está digitando
+## 📚 Arquitetura da Aplicação
 
-## 🚨 Troubleshooting
+### Backend
 
-### Problemas Comuns
+- **Express.js**: Framework web para Node.js
+- **Socket.IO**: Comunicação em tempo real bidirecional
+- **Prisma**: ORM para interação com MongoDB
+- **Passport.js**: Middleware de autenticação
+- **Clustering**: Utiliza o módulo cluster do Node.js com Socket.IO Cluster Adapter
 
-1. **Erro "There is an error with the server environment variables"**
+### Frontend
 
-   - Certifique-se de que o arquivo `server/.env` existe e contém todas as variáveis:
-   ```bash
-   # Copie o arquivo de exemplo
-   cp server/.env.example server/.env
-   
-   # Edite o arquivo com suas configurações
-   nano server/.env
-   ```
-   - Variáveis obrigatórias: `PORT`, `CLIENT_URL`, `DATABASE_URL`, `SESSION_SECRET`
+- **Next.js**: Framework React para produção
+- **Socket.IO Client**: Cliente para comunicação em tempo real
+- **Tailwind CSS**: Framework CSS utilitário
+- **React Hook Form**: Gerenciamento de formulários
 
-2. **Erro de conexão com MongoDB**
+### Banco de Dados
 
-   - Verifique se o MongoDB está executando
-   - Confirme a `DATABASE_URL` no arquivo `.env`
-   - Para MongoDB local: `mongodb://localhost:27017/teste-dev-nodejs`
+- **MongoDB**: Banco de dados NoSQL
+- **Replica Set**: Configuração para alta disponibilidade
+- **Modelos**:
+  - `User`: Usuários do sistema
+  - `Message`: Mensagens do chat
 
-3. **Prisma Client não encontrado**
+## 🔐 Sistema de Autenticação
 
-   ```bash
-   npm run prisma:generate
-   ```
+A aplicação utiliza Passport.js com estratégia local para autenticação:
 
-4. **Erro "Cannot find module '../../generated/prisma'"**
+- Registro e login de usuários
+- Senhas criptografadas com bcrypt
+- Sessões gerenciadas pelo Express
+- Middleware de autenticação para rotas protegidas
 
-   - Execute o comando para gerar o cliente Prisma:
-   ```bash
-   npm run prisma:generate
-   ```
+## ⚡ Clustering e Escalabilidade
 
-5. **Portas em uso**
+O sistema suporta clustering para melhor performance:
 
-   - Altere as portas nos arquivos `.env`
-   - Verifique processos usando: `lsof -i :3000` ou `lsof -i :3001`
-   - O Next.js automaticamente usará uma porta alternativa se necessário
+- Utiliza o Socket.IO Cluster Adapter
+- Distribui a carga entre múltiplos workers
+- Sincronização de estado entre instâncias
+- Balanceamento automático de conexões
 
-6. **Socket.IO não conecta**
-   - Verifique se o servidor está rodando
-   - Confirme as URLs nos arquivos de ambiente
+## 🧪 Testes
 
-### Logs
+```bash
+# Executar testes no servidor
+cd server
+npm test
 
-Para debugar, verifique os logs:
+# Executar testes no cliente
+cd client
+npm test
+```
 
-- Client: Console do navegador
-- Server: Terminal onde o servidor está executando
+## 📖 Referências e Artigos Utilizados
 
-## 🤝 Contribuição
+Durante o desenvolvimento desta aplicação, foram consultados os seguintes recursos:
+
+1. **Socket.IO Cluster Adapter**: https://socket.io/docs/v4/cluster-adapter/
+
+   - Implementação de clustering para Socket.IO
+   - Sincronização de estado entre workers
+   - Configuração de adapters personalizados
+
+2. **Socket.IO com Passport**: https://socket.io/how-to/use-with-passport
+
+   - Integração entre Socket.IO e Passport.js
+   - Autenticação de sockets
+   - Middleware de sessão compartilhado
+
+3. **Passport Local Strategy**: https://www.passportjs.org/packages/passport-local/
+   - Configuração da estratégia de autenticação local
+   - Serialização e deserialização de usuários
+   - Integração com Express sessions
+
+## 🤝 Contribuindo
 
 1. Fork o projeto
-2. Crie uma branch para sua feature
-3. Commit suas mudanças
-4. Push para a branch
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
-## 📄 Licença
+## 📝 Licença
 
-Este projeto está sob a licença ISC.
+Este projeto está sob a licença ISC. Veja o arquivo `LICENSE` para mais detalhes.
+
+## 🆘 Suporte
+
+Se você encontrar algum problema ou tiver dúvidas:
+
+1. Verifique se todas as dependências estão instaladas
+2. Certifique-se de que o MongoDB está rodando com Replica Set
+3. Verifique as variáveis de ambiente
+4. Consulte os logs dos containers: `docker-compose logs`
+
+Para mais ajuda, abra uma issue no repositório do projeto.
